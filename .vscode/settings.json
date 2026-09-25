@@ -1,0 +1,11 @@
+{
+  "konveyor.genai.enabled": true,
+  "konveyor.genai.agentMode": true,
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-1.8",
+      "path": "/usr/lib/jvm/java-1.8.0-openjdk",
+      "default": true
+    }
+  ]
+}

@@ -11,10 +11,6 @@ metadata:
     - MTA
     - OpenShift
   projectType: Java
-attributes:
-  che-code.eclipse.org/vscode-extensions:
-    - https://open-vsx.org/api/redhat/java/latest/file/redhat.java-latest.vsix
-    - https://open-vsx.org/api/redhat/mta-vscode-extension/latest/file/redhat.mta-vscode-extension-latest.vsix
 components:
   - name: tools
     container:
@@ -24,6 +20,9 @@ components:
       cpuLimit: "2"
       cpuRequest: "200m"
       mountSources: true
+      env:
+        - name: VSCODE_TRUSTED_EXTENSIONS
+          value: "redhat.java,vscjava.vscode-maven,redhat.mta-vscode-extension"
       endpoints:
         - name: http-app
           targetPort: 8080
@@ -33,11 +32,7 @@ commands:
   - id: build-sample
     exec:
       component: tools
-      commandLine: >
-        if [ -d /usr/lib/jvm/java-1.8.0 ]; then
-          export JAVA_HOME=/usr/lib/jvm/java-1.8.0;
-        fi;
-        mvn -f sample-app/pom.xml -B package -DskipTests
+      commandLine: bash scripts/with-java8.sh mvn -f sample-app/pom.xml -B package -DskipTests
       workingDir: ${PROJECT_SOURCE}
       group:
         kind: build
@@ -45,8 +40,16 @@ commands:
   - id: run-sample
     exec:
       component: tools
-      commandLine: java -jar sample-app/target/mta-java-demo-1.0.0-SNAPSHOT.jar
+      commandLine: bash scripts/with-java8.sh java -jar sample-app/target/mta-java-demo-1.0.0-SNAPSHOT.jar
       workingDir: ${PROJECT_SOURCE}
       group:
         kind: run
         isDefault: true
+  - id: devspaces-setup
+    exec:
+      component: tools
+      commandLine: bash scripts/devspaces-setup.sh
+      workingDir: ${PROJECT_SOURCE}
+events:
+  postStart:
+    - devspaces-setup

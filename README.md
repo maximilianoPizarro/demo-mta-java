@@ -130,7 +130,9 @@ El botón **Open in Dev Spaces** abre este repo en el Dev Spaces de este cluster
 
 `https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java`
 
-En la extensión MTA, perfil con targets OpenJDK 11/17/21 + cloud-readiness y carpeta de reglas `rules/bc4j`.
+Dev Spaces instala al arrancar las extensiones de `.vscode/extensions.json` y `.che/extensions.json` (`redhat.java`, Maven y `redhat.mta-vscode-extension`). El `postStart` copia `.konveyor/provider-settings.yaml` al modelo CPU de este cluster y el build usa JDK 8.
+
+Si el workspace ya estaba abierto, detenerlo y volver a entrar con el botón para que tome este devfile. Perfil de análisis: OpenJDK 11/17/21, cloud-readiness y reglas `rules/bc4j`.
 
 ## Qué mide el esfuerzo
 
@@ -143,13 +145,7 @@ El número **no** mide un cambio de servidor de aplicaciones.
 
 ## Developer Lightspeed (opcional)
 
-Lightspeed no se activa en el `Tackle` de este chart (`kai_llm_proxy_enabled: false`). Si ya tenés un endpoint OpenAI-compatible, en Dev Spaces / VS Code:
-
-1. Command Palette → `MTA: Open the Gen AI model provider configuration file`
-2. Configurar `baseURL` `/v1`, modelo y API key
-3. Activar Gen AI Agent Mode
-
-Sin ese endpoint, la demo termina en el informe estático de MTA.
+Lightspeed no se activa en el `Tackle` de este chart (`kai_llm_proxy_enabled: false`). En Dev Spaces el workspace deja activo `konveyor.genai.agentMode` y el proveedor `cpu-qwen` de `.konveyor/provider-settings.yaml` (Qwen2.5-Coder en el Knative Service de este cluster, bearer `mta-demo`).
 
 ## Valores útiles del chart
 

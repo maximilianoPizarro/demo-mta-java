@@ -1,0 +1,14 @@
+# Copied into the MTA extension global storage on workspace start.
+# CPU inference on this cluster: Qwen2.5-Coder via llama.cpp (tool calling).
+environment:
+  ALLOW_INSECURE: "true"
+models:
+  cpu-qwen: &active
+    environment:
+      OPENAI_API_KEY: "mta-demo"
+    provider: ChatOpenAI
+    args:
+      model: "bartowski/Qwen2.5-Coder-7B-Instruct-GGUF:Q4_K_M"
+      configuration:
+        baseURL: "https://mta-llm-mta-demo.apps.ocp.wjwzm.sandbox2915.opentlc.com/v1"
+active: *active

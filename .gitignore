@@ -5,7 +5,9 @@ sample-app/target/
 .classpath
 .project
 .settings/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 *.class
 __pycache__/
 *.pyc
