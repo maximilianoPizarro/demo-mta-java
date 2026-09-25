@@ -1,0 +1,83 @@
+# Shared Git source for app build, MTA analysis, and BC4J custom rules.
+git:
+  uri: https://github.com/maximilianoPizarro/demo-mta-java.git
+  ref: main
+  appPath: sample-app
+  rulesPath: rules/bc4j
+
+app:
+  enabled: true
+  name: mta-java-demo
+  replicaCount: 1
+  port: 8080
+  build:
+    # Set false before the repo is reachable; use oc start-build --from-dir instead.
+    enabled: true
+    dockerfilePath: Containerfile
+  image:
+    # Used when build.enabled is false and an image was already pushed.
+    repository: ""
+    tag: latest
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  route:
+    enabled: true
+
+# Static effort report (HTML) — works on Developer Sandbox without cluster-admin.
+# Full MTA Hub UI still requires mta.enabled=true + cluster-admin.
+reports:
+  enabled: true
+  name: mta-effort-report
+  port: 8080
+  build:
+    enabled: true
+    dockerfilePath: Containerfile
+    contextDir: reports
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  route:
+    enabled: true
+
+mta:
+  # Requires cluster-admin (OLM Subscription + CRDs). Set false on Developer Sandbox.
+  # When true, Hub UI Route shows native effort charts / incidents / inventory.
+  enabled: true
+  channel: stable-v8.2
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  packageName: mta-operator
+  applicationName: demo-mta-java
+  targets:
+    - openjdk11
+    - openjdk17
+    - openjdk21
+    - cloud-readiness
+    - bc4j
+  adminUser: admin
+  adminPassword: admin
+  tackle:
+    rwx_supported: "false"
+    feature_auth_required: "true"
+    hub_database_volume_size: 5Gi
+    hub_bucket_volume_size: 5Gi
+    cache_data_volume_size: 5Gi
+    analyzer_container_requests_cpu: "250m"
+    analyzer_container_requests_memory: 1Gi
+    analyzer_container_limits_cpu: "1"
+    analyzer_container_limits_memory: 2Gi
+    kai_llm_proxy_enabled: "false"
+  # Job waits for CRD/Hub then POSTs application + analysis task.
+  bootstrap:
+    image: quay.io/openshift/origin-cli:4.16
+    backoffLimit: 6
+    activeDeadlineSeconds: 1800

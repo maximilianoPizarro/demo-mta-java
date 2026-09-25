@@ -1,0 +1,173 @@
+{{- if .Values.mta.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+data:
+  tackle.yaml: |
+    apiVersion: tackle.konveyor.io/v1alpha1
+    kind: Tackle
+    metadata:
+      name: mta
+      namespace: {{ .Release.Namespace }}
+    spec:
+      rwx_supported: {{ .Values.mta.tackle.rwx_supported | quote }}
+      feature_auth_required: {{ .Values.mta.tackle.feature_auth_required | quote }}
+      hub_database_volume_size: {{ .Values.mta.tackle.hub_database_volume_size | quote }}
+      hub_bucket_volume_size: {{ .Values.mta.tackle.hub_bucket_volume_size | quote }}
+      cache_data_volume_size: {{ .Values.mta.tackle.cache_data_volume_size | quote }}
+      analyzer_container_requests_cpu: {{ .Values.mta.tackle.analyzer_container_requests_cpu | quote }}
+      analyzer_container_requests_memory: {{ .Values.mta.tackle.analyzer_container_requests_memory | quote }}
+      analyzer_container_limits_cpu: {{ .Values.mta.tackle.analyzer_container_limits_cpu | quote }}
+      analyzer_container_limits_memory: {{ .Values.mta.tackle.analyzer_container_limits_memory | quote }}
+      kai_llm_proxy_enabled: {{ .Values.mta.tackle.kai_llm_proxy_enabled | quote }}
+  bootstrap.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    NS="${NAMESPACE}"
+    GIT_URI="${GIT_URI}"
+    GIT_REF="${GIT_REF}"
+    APP_PATH="${APP_PATH}"
+    RULES_PATH="${RULES_PATH}"
+    APP_NAME="${APP_NAME}"
+    ADMIN_USER="${ADMIN_USER}"
+    ADMIN_PASSWORD="${ADMIN_PASSWORD}"
+    TARGETS_CSV="${TARGETS_CSV}"
+    hub_curl() {
+      if [ -n "${TOKEN:-}" ]; then
+        curl -sk -H "Authorization: Bearer ${TOKEN}" "$@"
+      else
+        curl -sk -u "${ADMIN_USER}:${ADMIN_PASSWORD}" "$@"
+      fi
+    }
+    echo "Waiting for Tackle CRD..."
+    for i in $(seq 1 90); do
+      if oc get crd tackles.tackle.konveyor.io >/dev/null 2>&1; then
+        echo "CRD is present"
+        break
+      fi
+      sleep 10
+      if [ "$i" -eq 90 ]; then
+        echo "Timed out waiting for tackles.tackle.konveyor.io"
+        exit 1
+      fi
+    done
+    echo "Applying Tackle CR..."
+    oc apply -f /config/tackle.yaml -n "${NS}"
+    echo "Waiting for mta-ui route..."
+    HUB_HOST=""
+    for i in $(seq 1 90); do
+      # Prefer the operator Route named "mta" (not app/report demo routes).
+      if oc get route mta -n "${NS}" >/dev/null 2>&1; then
+        HUB_HOST=$(oc get route mta -n "${NS}" -o jsonpath='{.spec.host}')
+      fi
+      if [ -z "${HUB_HOST}" ]; then
+        for r in $(oc get route -n "${NS}" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+          case "${r}" in
+            mta|mta-ui|*mta-ui*)
+              HUB_HOST=$(oc get route "${r}" -n "${NS}" -o jsonpath='{.spec.host}')
+              ;;
+          esac
+          [ -n "${HUB_HOST}" ] && break
+        done
+      fi
+      if [ -n "${HUB_HOST}" ]; then
+        echo "Found Hub host: ${HUB_HOST}"
+        break
+      fi
+      sleep 10
+      if [ "$i" -eq 90 ]; then
+        echo "Timed out waiting for MTA UI route"
+        oc get route,pods -n "${NS}" || true
+        exit 1
+      fi
+    done
+    HUB="https://${HUB_HOST}"
+    echo "Waiting for Hub HTTP readiness at ${HUB}..."
+    for i in $(seq 1 90); do
+      CODE=$(curl -sk -o /dev/null -w '%{http_code}' -u "${ADMIN_USER}:${ADMIN_PASSWORD}" "${HUB}/hub/applications" || true)
+      if [ "${CODE}" = "200" ] || [ "${CODE}" = "401" ] || [ "${CODE}" = "403" ]; then
+        echo "Hub responded with ${CODE}"
+        break
+      fi
+      sleep 10
+      if [ "$i" -eq 90 ]; then
+        echo "Timed out waiting for Hub API"
+        exit 1
+      fi
+    done
+    TOKEN=""
+    TOKEN_JSON=$(curl -sk -X POST "${HUB}/auth/realms/tackle/protocol/openid-connect/token" \
+      -H 'Content-Type: application/x-www-form-urlencoded' \
+      -d "username=${ADMIN_USER}&password=${ADMIN_PASSWORD}&grant_type=password&client_id=tackle-ui" || true)
+    if printf '%s' "${TOKEN_JSON}" | grep -q access_token; then
+      TOKEN=$(printf '%s' "${TOKEN_JSON}" | sed 's/.*"access_token":"\([^"]*\)".*/\1/')
+      echo "Obtained Keycloak access token"
+    else
+      echo "Using basic auth against Hub"
+    fi
+    echo "Looking up existing application ${APP_NAME}..."
+    APPS_JSON=$(hub_curl "${HUB}/hub/applications" || echo "[]")
+    APP_ID=""
+    TMP_APPS=$(mktemp)
+    printf '%s' "${APPS_JSON}" | tr '{' '\n' > "${TMP_APPS}"
+    while IFS= read -r line; do
+      id=$(printf '%s' "${line}" | sed -n 's/.*"id":\([0-9]*\).*/\1/p')
+      name=$(printf '%s' "${line}" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
+      if [ "${name}" = "${APP_NAME}" ] && [ -n "${id}" ]; then
+        APP_ID="${id}"
+        break
+      fi
+    done < "${TMP_APPS}"
+    rm -f "${TMP_APPS}"
+    if [ -z "${APP_ID}" ]; then
+      echo "Creating application ${APP_NAME}..."
+      CREATE_PAYLOAD="{\"name\":\"${APP_NAME}\",\"description\":\"Synthetic Java 8 demo for OpenJDK + cloud-readiness (WebLogic stays).\",\"repository\":{\"kind\":\"git\",\"url\":\"${GIT_URI}\",\"branch\":\"${GIT_REF}\",\"path\":\"${APP_PATH}\"}}"
+      CREATE_RESP=$(hub_curl -H 'Content-Type: application/json' -d "${CREATE_PAYLOAD}" "${HUB}/hub/applications")
+      APP_ID=$(printf '%s' "${CREATE_RESP}" | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -n1)
+      if [ -z "${APP_ID}" ]; then
+        echo "Failed to create application: ${CREATE_RESP}"
+        exit 1
+      fi
+      echo "Created application id=${APP_ID}"
+    else
+      echo "Application already exists with id=${APP_ID}; pointing it at ${GIT_URI} path ${APP_PATH}"
+      APP_JSON=$(hub_curl "${HUB}/hub/applications/${APP_ID}")
+      UPDATED=$(printf '%s' "${APP_JSON}" | sed -E 's#("kind":"git","url":")[^"]*","branch":"[^"]*","tag":"[^"]*","path":"[^"]*"#\1'"${GIT_URI}"'","branch":"'"${GIT_REF}"'","tag":"","path":"'"${APP_PATH}"'"#')
+      hub_curl -X PUT -H 'Content-Type: application/json' -d "${UPDATED}" "${HUB}/hub/applications/${APP_ID}" || echo "Application update failed; continuing with existing repository"
+    fi
+    LABELS_JSON="["
+    FIRST=1
+    OLDIFS="${IFS}"
+    IFS=','
+    for t in ${TARGETS_CSV}; do
+      t=$(printf '%s' "${t}" | tr -d ' ')
+      [ -z "${t}" ] && continue
+      # Skip custom bc4j target label when no rules path is configured.
+      if [ "${t}" = "bc4j" ] && [ -z "${RULES_PATH}" ]; then
+        continue
+      fi
+      if [ "${FIRST}" -eq 1 ]; then FIRST=0; else LABELS_JSON="${LABELS_JSON},"; fi
+      LABELS_JSON="${LABELS_JSON}\"konveyor.io/target=${t}\""
+    done
+    IFS="${OLDIFS}"
+    LABELS_JSON="${LABELS_JSON}]"
+    if [ -n "${RULES_PATH}" ]; then
+      RULES_JSON="\"rules\":{\"path\":\"\",\"labels\":{\"included\":${LABELS_JSON},\"excluded\":[]},\"repository\":{\"kind\":\"git\",\"url\":\"${GIT_URI}\",\"branch\":\"${GIT_REF}\",\"path\":\"${RULES_PATH}\"}}"
+    else
+      RULES_JSON="\"rules\":{\"path\":\"\",\"labels\":{\"included\":${LABELS_JSON},\"excluded\":[]}}"
+    fi
+    TASK_PAYLOAD="{\"name\":\"${APP_NAME}.analyzer\",\"kind\":\"analyzer\",\"addon\":\"analyzer\",\"application\":{\"id\":${APP_ID}},\"data\":{\"mode\":{\"binary\":false,\"withDeps\":true,\"artifact\":\"\"},\"tagger\":{\"enabled\":true},\"verbosity\":0,\"scope\":{\"withKnownLibs\":false,\"packages\":{\"included\":[],\"excluded\":[]}},\"targets\":[],\"sources\":[],${RULES_JSON}}}"
+    echo "Submitting analyzer task for application ${APP_ID}..."
+    TASK_RESP=$(hub_curl -H 'Content-Type: application/json' -d "${TASK_PAYLOAD}" "${HUB}/hub/tasks")
+    echo "Task response: ${TASK_RESP}"
+    TASK_ID=$(printf '%s' "${TASK_RESP}" | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -n1)
+    if [ -n "${TASK_ID}" ] && printf '%s' "${TASK_RESP}" | grep -q '"state":"Created"'; then
+      READY_PAYLOAD=$(printf '%s' "${TASK_RESP}" | sed 's/"state":"Created"/"state":"Ready"/')
+      echo "Marking task ${TASK_ID} Ready..."
+      hub_curl -X PUT -H 'Content-Type: application/json' -d "${READY_PAYLOAD}" "${HUB}/hub/tasks/${TASK_ID}" || true
+    fi
+    echo "Bootstrap complete. Open ${HUB} and review effort for OpenJDK + cloud-readiness + BC4J."
+{{- end }}

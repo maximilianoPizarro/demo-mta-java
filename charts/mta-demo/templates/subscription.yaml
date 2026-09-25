@@ -1,0 +1,14 @@
+{{- if .Values.mta.enabled }}
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: {{ .Values.mta.packageName }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  channel: {{ .Values.mta.channel | quote }}
+  name: {{ .Values.mta.packageName | quote }}
+  source: {{ .Values.mta.source | quote }}
+  sourceNamespace: {{ .Values.mta.sourceNamespace | quote }}
+  installPlanApproval: Automatic
+{{- end }}

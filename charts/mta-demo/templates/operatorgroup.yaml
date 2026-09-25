@@ -1,0 +1,11 @@
+{{- if .Values.mta.enabled }}
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  targetNamespaces:
+    - {{ .Release.Namespace }}
+{{- end }}

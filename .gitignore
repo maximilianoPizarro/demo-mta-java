@@ -1,0 +1,16 @@
+# Ignore Maven and IDE artifacts
+sample-app/target/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+*.class
+.DS_Store
+
+# Never commit OpenShift tokens or kubeconfigs
+.kube/
+**/kubeconfig
+.env
+.env.*

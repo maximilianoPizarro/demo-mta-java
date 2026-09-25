@@ -1,0 +1,56 @@
+{{- if .Values.mta.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: {{ .Values.mta.bootstrap.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.mta.bootstrap.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "mta-demo.name" . }}-mta-bootstrap
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: {{ .Values.mta.bootstrap.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "/config/bootstrap.sh"]
+          env:
+            - name: NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+            - name: GIT_URI
+              value: {{ .Values.git.uri | quote }}
+            - name: GIT_REF
+              value: {{ .Values.git.ref | quote }}
+            - name: APP_PATH
+              value: {{ .Values.git.appPath | quote }}
+            - name: RULES_PATH
+              value: {{ .Values.git.rulesPath | quote }}
+            - name: APP_NAME
+              value: {{ .Values.mta.applicationName | quote }}
+            - name: ADMIN_USER
+              value: {{ .Values.mta.adminUser | quote }}
+            - name: ADMIN_PASSWORD
+              value: {{ .Values.mta.adminPassword | quote }}
+            - name: TARGETS_CSV
+              value: {{ join "," .Values.mta.targets | quote }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+            defaultMode: 0755
+{{- end }}

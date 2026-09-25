@@ -1,0 +1,34 @@
+{{- if .Values.reports.enabled }}
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ .Values.reports.name }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  {{- if and .Values.reports.build.enabled .Values.app.build.enabled }}
+  source:
+    type: Git
+    git:
+      uri: {{ .Values.git.uri | quote }}
+      ref: {{ .Values.git.ref | quote }}
+    contextDir: {{ .Values.reports.build.contextDir | quote }}
+  {{- else }}
+  source:
+    type: Binary
+    binary: {}
+  {{- end }}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: {{ .Values.reports.build.dockerfilePath | quote }}
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ .Values.reports.name }}:latest
+  {{- if and .Values.reports.build.enabled .Values.app.build.enabled }}
+  triggers:
+    - type: ConfigChange
+  {{- end }}
+  runPolicy: Serial
+{{- end }}

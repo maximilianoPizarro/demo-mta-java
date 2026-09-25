@@ -1,0 +1,36 @@
+MTA Java Demo installed in namespace {{ .Release.Namespace }}.
+
+{{- if .Values.app.enabled }}
+Application
+  Route: oc get route {{ include "mta-demo.appName" . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}{"\n"}'
+  {{- if not .Values.app.build.enabled }}
+  Binary build:
+    oc start-build {{ include "mta-demo.appName" . }} -n {{ .Release.Namespace }} --from-dir=./sample-app --follow
+  {{- end }}
+{{- end }}
+
+{{- if .Values.reports.enabled }}
+Effort report (HTML visualization)
+  Route: oc get route {{ .Values.reports.name }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}{"\n"}'
+  {{- if or (not .Values.reports.build.enabled) (not .Values.app.build.enabled) }}
+  Binary build:
+    oc start-build {{ .Values.reports.name }} -n {{ .Release.Namespace }} --from-dir=./reports --follow
+  {{- end }}
+  Shows story points for OpenJDK + cloud-readiness + BC4J without needing cluster-admin.
+{{- end }}
+
+{{- if .Values.mta.enabled }}
+MTA Hub console (product UI — effort charts, inventory, incidents)
+  Bootstrap Job: oc logs -n {{ .Release.Namespace }} job/{{ include "mta-demo.fullname" . }}-mta-bootstrap -f
+  UI: oc get route -n {{ .Release.Namespace }} | grep -iE 'ui|mta'
+  Login: {{ .Values.mta.adminUser }} / {{ .Values.mta.adminPassword }}
+  Targets: {{ join ", " .Values.mta.targets }}
+  Git: {{ .Values.git.uri }} (app {{ .Values.git.appPath }}, rules {{ .Values.git.rulesPath }})
+  Requires cluster-admin. On Developer Sandbox set mta.enabled=false.
+{{- else }}
+MTA Hub console skipped (mta.enabled=false).
+  Red Hat ships the console via the MTA Operator (not a standalone Red Hat Helm chart).
+  Use a cluster with cluster-admin and --set mta.enabled=true to get the native Hub UI.
+{{- end }}
+
+Dev Spaces: https://workspaces.openshift.com/#{{ .Values.git.uri }}

@@ -1,0 +1,15 @@
+{{- if .Values.app.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mta-demo.appName" . }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "mta-demo.appName" . }}
+  ports:
+    - name: http
+      port: {{ .Values.app.port }}
+      targetPort: http
+{{- end }}

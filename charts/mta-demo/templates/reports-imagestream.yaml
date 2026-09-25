@@ -1,0 +1,11 @@
+{{- if .Values.reports.enabled }}
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ .Values.reports.name }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  lookupPolicy:
+    local: true
+{{- end }}

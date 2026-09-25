@@ -1,0 +1,15 @@
+# Build with JDK 8 so sun.misc / javax.xml.bind compile.
+FROM registry.access.redhat.com/ubi8/openjdk-8:1.20 AS build
+USER root
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -q package -DskipTests
+
+FROM registry.access.redhat.com/ubi8/openjdk-8-runtime:1.20
+USER 185
+WORKDIR /deployments
+COPY --from=build /build/target/mta-java-demo-1.0.0-SNAPSHOT.jar ./app.jar
+EXPOSE 8080
+ENV PORT=8080
+ENTRYPOINT ["java", "-jar", "/deployments/app.jar"]

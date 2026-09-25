@@ -1,0 +1,50 @@
+{{- if .Values.app.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mta-demo.appName" . }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+    app: {{ include "mta-demo.appName" . }}
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "mta-demo.appName" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "mta-demo.appName" . }}
+        {{- include "mta-demo.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: app
+          {{- if .Values.app.build.enabled }}
+          image: image-registry.openshift-image-registry.svc:5000/{{ .Release.Namespace }}/{{ include "mta-demo.imageStream" . }}:{{ .Values.app.image.tag }}
+          {{- else if .Values.app.image.repository }}
+          image: {{ printf "%s:%s" .Values.app.image.repository .Values.app.image.tag | quote }}
+          {{- else }}
+          image: image-registry.openshift-image-registry.svc:5000/{{ .Release.Namespace }}/{{ include "mta-demo.imageStream" . }}:{{ .Values.app.image.tag }}
+          {{- end }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.app.port | quote }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+{{- end }}

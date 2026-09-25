@@ -1,0 +1,67 @@
+{{- if .Values.mta.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["tackle.konveyor.io"]
+    resources: ["tackles"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["route.openshift.io"]
+    resources: ["routes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["services", "pods", "secrets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+    namespace: {{ .Release.Namespace }}
+---
+# Cluster role to watch CRD readiness (namespaced Role cannot list CRDs).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap-{{ .Release.Namespace }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap-{{ .Release.Namespace }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "mta-demo.fullname" . }}-mta-bootstrap-{{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "mta-demo.fullname" . }}-mta-bootstrap
+    namespace: {{ .Release.Namespace }}
+{{- end }}

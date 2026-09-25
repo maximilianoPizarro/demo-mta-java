@@ -1,0 +1,52 @@
+schemaVersion: 2.2.0
+metadata:
+  name: demo-mta-java
+  version: 1.0.0
+  displayName: MTA Java Demo
+  description: >
+    Dev Spaces workspace for analyzing a synthetic Java 8 WebLogic-style app
+    with MTA (OpenJDK 11/17/21 + cloud-readiness + custom BC4J rules).
+  tags:
+    - Java
+    - MTA
+    - OpenShift
+  projectType: Java
+attributes:
+  che-code.eclipse.org/vscode-extensions:
+    - https://open-vsx.org/api/redhat/java/latest/file/redhat.java-latest.vsix
+    - https://open-vsx.org/api/redhat/mta-vscode-extension/latest/file/redhat.mta-vscode-extension-latest.vsix
+components:
+  - name: tools
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi8-latest
+      memoryLimit: 3Gi
+      memoryRequest: 1Gi
+      cpuLimit: "2"
+      cpuRequest: "200m"
+      mountSources: true
+      endpoints:
+        - name: http-app
+          targetPort: 8080
+          exposure: public
+          protocol: http
+commands:
+  - id: build-sample
+    exec:
+      component: tools
+      commandLine: >
+        if [ -d /usr/lib/jvm/java-1.8.0 ]; then
+          export JAVA_HOME=/usr/lib/jvm/java-1.8.0;
+        fi;
+        mvn -f sample-app/pom.xml -B package -DskipTests
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: true
+  - id: run-sample
+    exec:
+      component: tools
+      commandLine: java -jar sample-app/target/mta-java-demo-1.0.0-SNAPSHOT.jar
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true

@@ -1,0 +1,15 @@
+{{- if .Values.reports.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.reports.name }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ .Values.reports.name }}
+  ports:
+    - name: http
+      port: {{ .Values.reports.port }}
+      targetPort: http
+{{- end }}

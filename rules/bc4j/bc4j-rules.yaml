@@ -1,0 +1,73 @@
+- category: mandatory
+  ruleID: bc4j-application-module-00001
+  effort: 5
+  labels:
+    - konveyor.io/target=bc4j
+  description: Oracle BC4J ApplicationModule detected
+  message: |
+    This application references oracle.jbo.server.ApplicationModuleImpl (ADF Business Components / BC4J).
+    Include certification effort for the chosen OpenJDK version and the WebLogic container image.
+    This finding does not recommend changing the application server.
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(java|xml|jpx|xcfg)$"
+      pattern: "oracle\\.jbo\\.server\\.ApplicationModuleImpl"
+
+- category: mandatory
+  ruleID: bc4j-entity-impl-00001
+  effort: 3
+  labels:
+    - konveyor.io/target=bc4j
+  description: Oracle BC4J EntityImpl detected
+  message: |
+    Entity objects extend oracle.jbo.server.EntityImpl. Plan regression and JDK certification
+    for entity lifecycle code. WebLogic remains the application server in this assessment.
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(java|xml|jpx|xcfg)$"
+      pattern: "oracle\\.jbo\\.server\\.EntityImpl"
+
+- category: mandatory
+  ruleID: bc4j-view-object-00001
+  effort: 3
+  labels:
+    - konveyor.io/target=bc4j
+  description: Oracle BC4J ViewObjectImpl detected
+  message: |
+    View objects extend oracle.jbo.server.ViewObjectImpl. Include container and OpenJDK
+    certification effort for query and view-layer customizations. Do not treat this as a
+    server migration finding.
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(java|xml|jpx|xcfg)$"
+      pattern: "oracle\\.jbo\\.server\\.ViewObjectImpl"
+
+- category: potential
+  ruleID: bc4j-config-files-00001
+  effort: 5
+  labels:
+    - konveyor.io/target=bc4j
+  description: BC4J or ADF model configuration present
+  message: |
+    BC4J configuration artifacts (bc4j.xcfg / Model.jpx) are present. Estimate effort to
+    validate ADF Business Components on the target OpenJDK and a containerized WebLogic image.
+  when:
+    or:
+      - builtin.file:
+          pattern: ".*bc4j\\.xcfg$"
+      - builtin.file:
+          pattern: ".*\\.jpx$"
+
+- category: potential
+  ruleID: bc4j-package-import-00001
+  effort: 2
+  labels:
+    - konveyor.io/target=bc4j
+  description: oracle.jbo package usage detected
+  message: |
+    Code or metadata references the oracle.jbo package. Count this toward BC4J certification
+    for Java version upgrades and cloud readiness, not toward an application-server change.
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(java|xml|jpx|xcfg)$"
+      pattern: "oracle\\.jbo"

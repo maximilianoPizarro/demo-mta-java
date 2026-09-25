@@ -1,0 +1,8 @@
+name: bc4j-certification
+description: >
+  Custom rules that detect Oracle ADF Business Components (BC4J) footprints
+  so MTA can estimate JDK and container certification effort. These rules do
+  not recommend leaving WebLogic.
+labels:
+  - konveyor.io/target=bc4j
+  - konveyor.io/include=always

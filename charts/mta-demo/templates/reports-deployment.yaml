@@ -1,0 +1,41 @@
+{{- if .Values.reports.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.reports.name }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+    app: {{ .Values.reports.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.reports.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.reports.name }}
+        {{- include "mta-demo.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: report
+          image: image-registry.openshift-image-registry.svc:5000/{{ .Release.Namespace }}/{{ .Values.reports.name }}:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: {{ .Values.reports.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.reports.resources | nindent 12 }}
+{{- end }}

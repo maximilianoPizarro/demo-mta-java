@@ -1,0 +1,19 @@
+{{- if and .Values.reports.enabled .Values.reports.route.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ .Values.reports.name }}
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+  annotations:
+    description: MTA effort report visualization (story points / incidents by target)
+spec:
+  to:
+    kind: Service
+    name: {{ .Values.reports.name }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}

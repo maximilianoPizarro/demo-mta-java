@@ -1,0 +1,10 @@
+apiVersion: v2
+name: mta-demo
+description: >
+  Demo chart that deploys a synthetic Java 8 sample app and optionally installs
+  Migration Toolkit for Applications, wiring analysis to the same Git repository
+  (OpenJDK 11/17/21 + cloud-readiness + custom BC4J rules). Does not migrate
+  away from WebLogic.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

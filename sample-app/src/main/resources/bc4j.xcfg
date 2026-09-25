@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic BC4J config for custom MTA rules. Not a real ADF runtime artifact. -->
+<bc4j-config>
+  <application-module name="DemoAppModule"
+                      class="com.example.demo.Bc4jApplicationModule"
+                      extends="oracle.jbo.server.ApplicationModuleImpl"/>
+  <jdbc-url>jdbc:oracle:thin:@localhost:1521:ORCL</jdbc-url>
+</bc4j-config>
