@@ -41,6 +41,7 @@ public class App {
                     + "<body><h1>MTA Java Demo</h1>"
                     + "<p>Synthetic Java 8 sample for OpenJDK and cloud-readiness effort analysis.</p>"
                     + "<p>WebLogic remains the application server target; this process only publishes the sample.</p>"
+                    + "<p><a href=\"https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java\">Open in Dev Spaces</a></p>"
                     + "</body></html>";
             byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");

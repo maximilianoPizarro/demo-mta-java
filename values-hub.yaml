@@ -1,0 +1,50 @@
+# Hub cluster for demo-mta-java.
+# Scenario A (hub-only CPU): MTA + Dev Spaces + OpenShift Serverless.
+# The CPU model is a Knative Service (scale from zero), not a GPU InferenceService.
+clusterGroup:
+  name: hub
+  isHubCluster: true
+  namespaces:
+    mta-demo:
+    knative-serving:
+    openshift-devspaces:
+  subscriptions:
+    mta:
+      name: mta-operator
+      namespace: mta-demo
+      channel: stable-v8.2
+      source: redhat-operators
+    serverless:
+      name: serverless-operator
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    devspaces:
+      name: devspaces
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+  argoProjects:
+    - hub
+  applications:
+    mta-demo:
+      name: mta-demo
+      namespace: mta-demo
+      argoProject: hub
+      path: charts/mta-demo
+    openshift-serverless:
+      name: openshift-serverless
+      namespace: knative-serving
+      argoProject: hub
+      path: charts/openshift-serverless
+    cpu-inference:
+      name: cpu-inference
+      namespace: mta-demo
+      argoProject: hub
+      path: charts/cpu-inference
+    devspaces:
+      name: devspaces
+      namespace: openshift-devspaces
+      argoProject: hub
+      path: charts/devspaces
+  managedClusterGroups: {}

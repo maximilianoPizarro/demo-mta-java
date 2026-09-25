@@ -1,0 +1,19 @@
+# Scenario A — one hub, CPU inference via OpenShift Serverless, no spokes.
+# Install the Validated Patterns Operator, then:
+#   oc apply -f examples/pattern-cr/hub-only-cpu.yaml
+apiVersion: gitops.hybrid-cloud-patterns.io/v1alpha1
+kind: Pattern
+metadata:
+  name: demo-mta-java
+  namespace: openshift-operators
+spec:
+  clusterGroupName: hub
+  extraValueFiles:
+    - /values-hub-only.yaml
+  gitSpec:
+    targetRepo: https://github.com/maximilianoPizarro/demo-mta-java.git
+    targetRevision: main
+  multiSourceConfig:
+    enabled: true
+    clusterGroupChartVersion: "0.9.*"
+    helmRepoUrl: https://charts.validatedpatterns.io

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openshift-serverless
+description: OpenShift Serverless operator and KnativeServing for CPU inference.
+type: application
+version: 0.1.0
+appVersion: "1.37"

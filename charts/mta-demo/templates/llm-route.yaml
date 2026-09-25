@@ -1,0 +1,17 @@
+{{- if and .Values.mta.llm.enabled .Values.mta.llm.route.enabled (eq .Values.mta.llm.runtime "deployment") }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-llm
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  to:
+    kind: Service
+    name: {{ include "mta-demo.fullname" . }}-llm
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}

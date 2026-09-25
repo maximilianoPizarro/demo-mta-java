@@ -1,5 +1,7 @@
 # Demo MTA: Java 8 a OpenJDK + aptitud a contenedores (WebLogic se queda)
 
+[![Open in Dev Spaces](https://img.shields.io/badge/Open%20in-Dev%20Spaces-EE0000?style=for-the-badge&logo=redhat&logoColor=white)](https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java)
+
 Demo sintética para medir esfuerzo de actualización de Java (8 a 11/17/21) y aptitud a contenedores con Migration Toolkit for Applications.
 
 El mismo repositorio Git alimenta:
@@ -7,6 +9,29 @@ El mismo repositorio Git alimenta:
 1. El build/deploy de la app de ejemplo (Helm)
 2. El análisis de MTA (código en `sample-app`, reglas BC4J en `rules/bc4j`)
 3. El workspace de Dev Spaces (IDE + extensión MTA)
+
+## Pattern (hub-only, CPU)
+
+Un solo cluster, sin spokes y sin GPU. El Pattern CR de escenario A está en `examples/pattern-cr/hub-only-cpu.yaml`.
+
+| Pieza | Chart | Qué hace |
+|---|---|---|
+| MTA | `charts/mta-demo` | Operador, Hub y la app de ejemplo |
+| Dev Spaces | `charts/devspaces` | IDE en el browser sobre este repo |
+| Serverless | `charts/openshift-serverless` | Knative Serving |
+| Inferencia CPU | `charts/cpu-inference` | Qwen2.5-Coder-7B con tool calling, escala desde cero |
+
+En el cluster actual:
+
+```bash
+make deploy
+```
+
+Instalación GitOps (Validated Patterns Operator ya instalado):
+
+```bash
+oc apply -f examples/pattern-cr/hub-only-cpu.yaml
+```
 
 ## Contenido
 
@@ -101,9 +126,9 @@ oc logs -n <namespace> job/mta-demo-mta-demo-mta-bootstrap -f   # solo si mta.en
 
 ## Dev Spaces
 
-Abrir el mismo repo:
+El botón **Open in Dev Spaces** abre este repo en el Dev Spaces de este cluster:
 
-`https://workspaces.openshift.com/#https://github.com/maximilianoPizarro/demo-mta-java`
+`https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java`
 
 En la extensión MTA, perfil con targets OpenJDK 11/17/21 + cloud-readiness y carpeta de reglas `rules/bc4j`.
 

@@ -1,0 +1,16 @@
+{{- $ns := .Values.subscription.namespace }}
+{{- $name := .Values.subscription.name }}
+{{- $existing := lookup "operators.coreos.com/v1alpha1" "Subscription" $ns $name }}
+{{- if not $existing }}
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+spec:
+  channel: {{ .Values.subscription.channel | quote }}
+  installPlanApproval: Automatic
+  name: {{ $name | quote }}
+  source: {{ .Values.subscription.source | quote }}
+  sourceNamespace: {{ .Values.subscription.sourceNamespace | quote }}
+{{- end }}

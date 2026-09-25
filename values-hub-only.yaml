@@ -1,0 +1,8 @@
+# Hub-only CPU overlay (Scenario A).
+# This pattern has no east/west spokes, Skupper, or GPU InferenceServices.
+# Load it from the Pattern CR extraValueFiles so a single cluster does not
+# sync missing spoke applications.
+clusterGroup:
+  name: hub
+  isHubCluster: true
+  managedClusterGroups: {}

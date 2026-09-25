@@ -33,4 +33,15 @@ MTA Hub console skipped (mta.enabled=false).
   Use a cluster with cluster-admin and --set mta.enabled=true to get the native Hub UI.
 {{- end }}
 
-Dev Spaces: https://workspaces.openshift.com/#{{ .Values.git.uri }}
+{{- if and .Values.mta.llm.enabled (eq .Values.mta.llm.runtime "knative") }}
+CPU tool-calling model
+  Knative Service from charts/cpu-inference (scales from zero).
+  PVC {{ include "mta-demo.fullname" . }}-llm keeps the GGUF across scale-down.
+  Model: {{ .Values.mta.llm.model }}
+  Bearer: {{ .Values.mta.llm.apiKey }}
+{{- else if .Values.mta.llm.enabled }}
+CPU tool-calling model (always-on Deployment)
+  Route: oc get route {{ include "mta-demo.fullname" . }}-llm -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}{"\n"}'
+{{- end }}
+
+Dev Spaces: https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#{{ .Values.git.uri }}

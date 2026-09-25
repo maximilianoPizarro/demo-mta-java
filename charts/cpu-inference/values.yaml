@@ -1,0 +1,18 @@
+name: mta-llm
+image: ghcr.io/ggml-org/llama.cpp:server
+model: bartowski/Qwen2.5-Coder-7B-Instruct-GGUF:Q4_K_M
+context: 4096
+threads: 4
+port: 8080
+apiKey: mta-demo
+# PVC created by charts/mta-demo so the GGUF survives scale-to-zero.
+pvcName: mta-demo-llm
+minScale: "0"
+maxScale: "1"
+resources:
+  requests:
+    cpu: "2"
+    memory: 8Gi
+  limits:
+    cpu: "4"
+    memory: 12Gi

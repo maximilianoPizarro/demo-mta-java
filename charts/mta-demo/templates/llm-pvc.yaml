@@ -1,0 +1,16 @@
+{{- if .Values.mta.llm.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-llm
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mta.llm.storage }}
+{{- end }}

@@ -1,0 +1,63 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.name }}
+    app.kubernetes.io/part-of: demo-mta-java
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: {{ .Values.minScale | quote }}
+        autoscaling.knative.dev/maxScale: {{ .Values.maxScale | quote }}
+        autoscaling.knative.dev/target: "1"
+        autoscaling.knative.dev/scale-down-delay: "5m"
+        serving.knative.dev/progress-deadline: "1800s"
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 600
+      containers:
+        - name: llama
+          image: {{ .Values.image | quote }}
+          args:
+            - --jinja
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ .Values.port | quote }}
+            - -c
+            - {{ .Values.context | quote }}
+            - -t
+            - {{ .Values.threads | quote }}
+            - -hf
+            - {{ .Values.model | quote }}
+            {{- if .Values.apiKey }}
+            - --api-key
+            - {{ .Values.apiKey | quote }}
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.port }}
+              protocol: TCP
+          env:
+            - name: HOME
+              value: /models
+            - name: HF_HOME
+              value: /models/hf
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            failureThreshold: 80
+            timeoutSeconds: 5
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ .Values.pvcName }}

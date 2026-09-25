@@ -1,0 +1,6 @@
+apiVersion: v2
+name: devspaces
+description: Red Hat OpenShift Dev Spaces operator and CheCluster.
+type: application
+version: 0.1.0
+appVersion: "3.0"

@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: serverless-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: serverless-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["operator.knative.dev"]
+    resources: ["knativeservings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: serverless-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: serverless-bootstrap
+subjects:
+  - kind: ServiceAccount
+    name: serverless-bootstrap
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: serverless-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+data:
+  knative-serving.yaml: |
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: {{ .Values.serving.namespace }}
+    ---
+    apiVersion: operator.knative.dev/v1beta1
+    kind: KnativeServing
+    metadata:
+      name: knative-serving
+      namespace: {{ .Values.serving.namespace }}
+    spec:
+      config:
+        features:
+          kubernetes.podspec-persistent-volume-claim: enabled
+          kubernetes.podspec-persistent-volume-write: enabled
+        defaults:
+          max-revision-timeout-seconds: "1800"
+          revision-timeout-seconds: "1800"
+  bootstrap.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    echo "Waiting for KnativeServing CRD..."
+    for i in $(seq 1 90); do
+      if oc get crd knativeservings.operator.knative.dev >/dev/null 2>&1; then
+        echo "CRD is present"
+        break
+      fi
+      sleep 10
+      if [ "$i" -eq 90 ]; then
+        echo "Timed out waiting for serverless-operator"
+        exit 1
+      fi
+    done
+    if oc get knativeserving knative-serving -n {{ .Values.serving.namespace }} >/dev/null 2>&1; then
+      echo "KnativeServing already exists"
+    else
+      oc apply -f /config/knative-serving.yaml
+    fi
+    echo "Waiting for KnativeServing Ready..."
+    oc wait --for=condition=Ready knativeserving/knative-serving -n {{ .Values.serving.namespace }} --timeout=20m
+    oc get crd services.serving.knative.dev
+    echo "OpenShift Serverless is ready"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: serverless-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: {{ .Values.bootstrap.activeDeadlineSeconds }}
+  template:
+    spec:
+      serviceAccountName: serverless-bootstrap
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: {{ .Values.bootstrap.image | quote }}
+          command: ["/bin/bash", "/config/bootstrap.sh"]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          configMap:
+            name: serverless-bootstrap
+            defaultMode: 0755

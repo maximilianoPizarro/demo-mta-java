@@ -76,6 +76,29 @@ mta:
     analyzer_container_limits_cpu: "1"
     analyzer_container_limits_memory: 2Gi
     kai_llm_proxy_enabled: "false"
+  # CPU tool-calling model for MTA agent suggestions. Not the Sandbox shared Granite/Qwen.
+  llm:
+    enabled: true
+    # knative: OpenShift Serverless scales the CPU model from zero.
+    # deployment: always-on Pod (used only if Serverless is not installed).
+    runtime: knative
+    image: ghcr.io/ggml-org/llama.cpp:server
+    # llama.cpp native tool calling (Qwen 2.5 Coder chat template, --jinja).
+    model: bartowski/Qwen2.5-Coder-7B-Instruct-GGUF:Q4_K_M
+    context: 4096
+    threads: 4
+    port: 8080
+    apiKey: mta-demo
+    storage: 10Gi
+    resources:
+      requests:
+        cpu: "2"
+        memory: 8Gi
+      limits:
+        cpu: "4"
+        memory: 12Gi
+    route:
+      enabled: true
   # Job waits for CRD/Hub then POSTs application + analysis task.
   bootstrap:
     image: quay.io/openshift/origin-cli:4.16

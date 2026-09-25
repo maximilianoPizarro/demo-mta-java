@@ -1,0 +1,15 @@
+---
+global:
+  pattern: demo-mta-java
+  singleArgoCD: true
+  options:
+    useCSV: false
+    syncPolicy: Automatic
+    installPlanApproval: Automatic
+main:
+  # Scenario A: one hub cluster, CPU inference, no spokes.
+  clusterGroupName: hub
+  multiSourceConfig:
+    enabled: true
+    clusterGroupChartVersion: "0.9.*"
+    helmRepoUrl: https://charts.validatedpatterns.io

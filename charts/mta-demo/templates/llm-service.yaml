@@ -1,0 +1,15 @@
+{{- if and .Values.mta.llm.enabled (eq .Values.mta.llm.runtime "deployment") }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-llm
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "mta-demo.fullname" . }}-llm
+  ports:
+    - name: http
+      port: {{ .Values.mta.llm.port }}
+      targetPort: http
+{{- end }}

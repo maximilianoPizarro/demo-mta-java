@@ -1,0 +1,11 @@
+subscription:
+  name: serverless-operator
+  namespace: openshift-operators
+  channel: stable
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+serving:
+  namespace: knative-serving
+bootstrap:
+  image: quay.io/openshift/origin-cli:4.16
+  activeDeadlineSeconds: 1800

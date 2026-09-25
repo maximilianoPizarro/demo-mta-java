@@ -1,0 +1,76 @@
+{{- if and .Values.mta.llm.enabled (eq .Values.mta.llm.runtime "deployment") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-llm
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+    app: {{ include "mta-demo.fullname" . }}-llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "mta-demo.fullname" . }}-llm
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "mta-demo.fullname" . }}-llm
+        {{- include "mta-demo.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: llama
+          image: {{ .Values.mta.llm.image | quote }}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --jinja
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ .Values.mta.llm.port | quote }}
+            - -c
+            - {{ .Values.mta.llm.context | quote }}
+            - -t
+            - {{ .Values.mta.llm.threads | quote }}
+            - -hf
+            - {{ .Values.mta.llm.model | quote }}
+            {{- if .Values.mta.llm.apiKey }}
+            - --api-key
+            - {{ .Values.mta.llm.apiKey | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mta.llm.port }}
+          env:
+            - name: HOME
+              value: /models
+            - name: HF_HOME
+              value: /models/hf
+          resources:
+            {{- toYaml .Values.mta.llm.resources | nindent 12 }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 90
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            failureThreshold: 5
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "mta-demo.fullname" . }}-llm
+{{- end }}

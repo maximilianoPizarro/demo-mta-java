@@ -1,0 +1,7 @@
+apiVersion: v2
+name: cpu-inference
+description: >
+  Knative Service that scales Qwen2.5-Coder-7B (llama.cpp, tool calling) from zero on CPU.
+type: application
+version: 0.1.0
+appVersion: "7B"
