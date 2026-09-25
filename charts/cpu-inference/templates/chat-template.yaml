@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-chat-template
+  labels:
+    app.kubernetes.io/name: {{ .Values.name }}
+    app.kubernetes.io/part-of: demo-mta-java
+data:
+  chat.jinja: |
+{{ .Files.Get "qwen-chat-template.jinja" | indent 4 }}

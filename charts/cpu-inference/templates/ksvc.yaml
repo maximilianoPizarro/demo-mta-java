@@ -22,6 +22,12 @@ spec:
           image: {{ .Values.image | quote }}
           args:
             - --jinja
+            - --reasoning
+            - "off"
+            - --reasoning-format
+            - none
+            - --chat-template-file
+            - /templates/chat.jinja
             - --host
             - 0.0.0.0
             - --port
@@ -49,6 +55,9 @@ spec:
           volumeMounts:
             - name: models
               mountPath: /models
+            - name: chat-template
+              mountPath: /templates
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /health
@@ -61,3 +70,6 @@ spec:
         - name: models
           persistentVolumeClaim:
             claimName: {{ .Values.pvcName }}
+        - name: chat-template
+          configMap:
+            name: {{ .Values.name }}-chat-template
