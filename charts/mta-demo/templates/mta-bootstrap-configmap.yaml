@@ -163,7 +163,7 @@ data:
     echo "Submitting analyzer task for application ${APP_ID}..."
     TASK_RESP=$(hub_curl -H 'Content-Type: application/json' -d "${TASK_PAYLOAD}" "${HUB}/hub/tasks")
     echo "Task response: ${TASK_RESP}"
-    TASK_ID=$(printf '%s' "${TASK_RESP}" | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -n1)
+    TASK_ID=$(printf '%s' "${TASK_RESP}" | sed -n 's/^{"id":\([0-9]*\).*/\1/p' | head -n1)
     if [ -n "${TASK_ID}" ] && printf '%s' "${TASK_RESP}" | grep -q '"state":"Created"'; then
       READY_PAYLOAD=$(printf '%s' "${TASK_RESP}" | sed 's/"state":"Created"/"state":"Ready"/')
       echo "Marking task ${TASK_ID} Ready..."
