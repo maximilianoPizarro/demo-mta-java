@@ -11,6 +11,9 @@ metadata:
     - MTA
     - OpenShift
   projectType: Java
+attributes:
+  # Che Code downloads these at startup. The "...-latest.vsix" names 404 on Open VSX.
+  che-code.eclipse.org/vscode-extensions: '["https://open-vsx.org/api/redhat/java/linux-x64/1.57.2026092508/file/redhat.java-1.57.2026092508@linux-x64.vsix","https://open-vsx.org/api/vscjava/vscode-maven/0.45.3/file/vscjava.vscode-maven-0.45.3.vsix","https://open-vsx.org/api/redhat/mta-vscode-extension/8.2.1/file/redhat.mta-vscode-extension-8.2.1.vsix"]'
 components:
   - name: tools
     container:
