@@ -7,6 +7,8 @@ sample-app/target/
 .settings/
 .vscode/
 *.class
+__pycache__/
+*.pyc
 .DS_Store
 
 # Never commit OpenShift tokens or kubeconfigs
