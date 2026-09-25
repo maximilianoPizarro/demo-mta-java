@@ -1,4 +1,4 @@
-# Demo MTA: Java 8 a OpenJDK + aptitud a contenedores (WebLogic se queda)
+# Demo MTA: Java 8 a OpenJDK + aptitud a contenedores
 
 [![Open in Dev Spaces](https://img.shields.io/badge/Open%20in-Dev%20Spaces-EE0000?style=for-the-badge&logo=redhat&logoColor=white)](https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java)
 
