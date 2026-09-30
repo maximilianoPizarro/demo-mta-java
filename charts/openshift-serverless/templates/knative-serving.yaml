@@ -1,0 +1,17 @@
+# Applied by Argo/Helm directly. Subscriptions come from values-hub; this chart
+# only creates the KnativeServing instance once the CRD exists.
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: {{ .Values.serving.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  config:
+    features:
+      kubernetes.podspec-persistent-volume-claim: enabled
+      kubernetes.podspec-persistent-volume-write: enabled
+    defaults:
+      max-revision-timeout-seconds: "1800"
+      revision-timeout-seconds: "1800"

@@ -1,30 +1,27 @@
+# Wait Job as an Argo Sync hook (not a Helm hook). Pure Helm-hook charts look
+# Synced/empty to Argo and never create CheCluster.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: devspaces-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: devspaces-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 rules:
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["org.eclipse.che"]
     resources: ["checlusters"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get", "list", "create"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["route.openshift.io"]
     resources: ["routes"]
     verbs: ["get", "list", "watch"]
@@ -34,9 +31,8 @@ kind: ClusterRoleBinding
 metadata:
   name: devspaces-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -51,29 +47,9 @@ kind: ConfigMap
 metadata:
   name: devspaces-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 data:
-  checluster.yaml: |
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: {{ .Values.che.namespace }}
-    ---
-    apiVersion: org.eclipse.che/v2
-    kind: CheCluster
-    metadata:
-      name: {{ .Values.che.name }}
-      namespace: {{ .Values.che.namespace }}
-    spec:
-      components: {}
-      networking: {}
-      devEnvironments:
-        defaultNamespace:
-          template: "<username>-devspaces"
-        storage:
-          pvcStrategy: per-user
   bootstrap.sh: |
     #!/bin/bash
     set -euo pipefail
@@ -89,30 +65,31 @@ data:
         exit 1
       fi
     done
-    if oc get checluster {{ .Values.che.name }} -n {{ .Values.che.namespace }} >/dev/null 2>&1; then
-      echo "CheCluster already exists"
-    else
-      oc apply -f /config/checluster.yaml
-    fi
     echo "Waiting for Dev Spaces route..."
     for i in $(seq 1 60); do
-      if oc get route -n {{ .Values.che.namespace }} --no-headers 2>/dev/null | grep -q .; then
-        oc get route -n {{ .Values.che.namespace }}
-        exit 0
+      if oc get checluster {{ .Values.che.name }} -n {{ .Values.che.namespace }} >/dev/null 2>&1; then
+        if oc get route -n {{ .Values.che.namespace }} --no-headers 2>/dev/null | grep -q .; then
+          oc get route -n {{ .Values.che.namespace }}
+          echo "Dev Spaces route is present"
+          exit 0
+        fi
+        echo "CheCluster present; waiting for route (attempt $i)"
+      else
+        echo "CheCluster not applied yet (attempt $i)"
       fi
       sleep 15
     done
     echo "CheCluster applied; route not visible yet"
-    oc get checluster -n {{ .Values.che.namespace }} || true
+    oc get checluster -n {{ .Values.che.namespace }} -o yaml || true
+    exit 0
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: devspaces-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "10"
-    helm.sh/hook-delete-policy: before-hook-creation
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: 2
   activeDeadlineSeconds: {{ .Values.bootstrap.activeDeadlineSeconds }}

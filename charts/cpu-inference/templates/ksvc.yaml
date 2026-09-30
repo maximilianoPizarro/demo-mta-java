@@ -5,6 +5,8 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ .Values.name }}
     app.kubernetes.io/part-of: demo-mta-java
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   template:
     metadata:

@@ -1,30 +1,27 @@
+# Wait Job as an Argo Sync hook (not a Helm hook). Pure Helm-hook charts look
+# Synced/empty to Argo and never create KnativeServing.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: serverless-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: serverless-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 rules:
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["operator.knative.dev"]
     resources: ["knativeservings"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get", "list", "create"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources: ["deployments"]
     verbs: ["get", "list", "watch"]
@@ -34,9 +31,8 @@ kind: ClusterRoleBinding
 metadata:
   name: serverless-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -51,29 +47,9 @@ kind: ConfigMap
 metadata:
   name: serverless-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 data:
-  knative-serving.yaml: |
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: {{ .Values.serving.namespace }}
-    ---
-    apiVersion: operator.knative.dev/v1beta1
-    kind: KnativeServing
-    metadata:
-      name: knative-serving
-      namespace: {{ .Values.serving.namespace }}
-    spec:
-      config:
-        features:
-          kubernetes.podspec-persistent-volume-claim: enabled
-          kubernetes.podspec-persistent-volume-write: enabled
-        defaults:
-          max-revision-timeout-seconds: "1800"
-          revision-timeout-seconds: "1800"
   bootstrap.sh: |
     #!/bin/bash
     set -euo pipefail
@@ -89,24 +65,30 @@ data:
         exit 1
       fi
     done
-    if oc get knativeserving knative-serving -n {{ .Values.serving.namespace }} >/dev/null 2>&1; then
-      echo "KnativeServing already exists"
-    else
-      oc apply -f /config/knative-serving.yaml
-    fi
     echo "Waiting for KnativeServing Ready..."
-    oc wait --for=condition=Ready knativeserving/knative-serving -n {{ .Values.serving.namespace }} --timeout=20m
-    oc get crd services.serving.knative.dev
-    echo "OpenShift Serverless is ready"
+    for i in $(seq 1 120); do
+      if oc get knativeserving knative-serving -n {{ .Values.serving.namespace }} >/dev/null 2>&1; then
+        if oc wait --for=condition=Ready knativeserving/knative-serving -n {{ .Values.serving.namespace }} --timeout=30s 2>/dev/null; then
+          oc get crd services.serving.knative.dev
+          echo "OpenShift Serverless is ready"
+          exit 0
+        fi
+      else
+        echo "KnativeServing not applied yet (attempt $i)"
+      fi
+      sleep 10
+    done
+    echo "Timed out waiting for KnativeServing Ready"
+    oc get knativeserving -n {{ .Values.serving.namespace }} -o yaml || true
+    exit 1
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: serverless-bootstrap
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "10"
-    helm.sh/hook-delete-policy: before-hook-creation
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: 2
   activeDeadlineSeconds: {{ .Values.bootstrap.activeDeadlineSeconds }}

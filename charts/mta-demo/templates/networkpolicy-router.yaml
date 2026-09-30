@@ -1,0 +1,31 @@
+# Tackle installs mta-deny-all in this namespace. Without an allow from the
+# OpenShift ingress router, demo app Routes return HTTP 503 even when pods are Ready.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "mta-demo.fullname" . }}-router-ingress
+  labels:
+    {{- include "mta-demo.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - {{ .Values.app.name | quote }}
+          {{- range .Values.solutions.apps }}
+          - {{ .name | quote }}
+          {{- end }}
+          {{- if .Values.reports.enabled }}
+          - {{ .Values.reports.name | quote }}
+          {{- end }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+      ports:
+        - protocol: TCP
+          port: {{ .Values.app.port }}
