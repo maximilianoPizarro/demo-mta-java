@@ -1,8 +1,8 @@
-# Demo MTA: Java 8 a OpenJDK + aptitud a contenedores
+# Demo MTA: esfuerzo Java 8 a 11/17/21 y aptitud a contenedores, sin cambiar WebLogic
 
 [![Open in Dev Spaces](https://img.shields.io/badge/Open%20in-Dev%20Spaces-EE0000?style=for-the-badge&logo=redhat&logoColor=white)](https://github.com/maximilianoPizarro/demo-mta-java#dev-spaces)
 
-Demo sintética para medir esfuerzo de actualización de Java (8 a 11/17/21) y aptitud a contenedores con Migration Toolkit for Applications.
+Demo sintética con Migration Toolkit for Applications: mide el esfuerzo de pasar de Java 8 a OpenJDK 11, 17 y 21 y la aptitud a contenedores. WebLogic se queda como servidor de aplicaciones; no hay migración a EAP, Quarkus ni Open Liberty.
 
 El mismo repositorio Git alimenta:
 

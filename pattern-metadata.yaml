@@ -1,11 +1,12 @@
 metadata:
   name: demo-mta-java
-  displayName: MTA with Dev Spaces and CPU inference
+  displayName: "Demo MTA: esfuerzo Java 8 a 11/17/21 y aptitud a contenedores, sin cambiar WebLogic"
   description: >
-    Hub-only CPU pattern. Migration Toolkit for Applications measures Java 8
-    to OpenJDK 11/17/21 and container readiness. OpenShift Dev Spaces opens
-    the repo. OpenShift Serverless scales a CPU llama.cpp model from zero
-    for tool calling. WebLogic stays the application server.
+    Demo sintética hub-only (CPU). Migration Toolkit for Applications mide el
+    esfuerzo de Java 8 a OpenJDK 11/17/21 y la aptitud a contenedores.
+    OpenShift Dev Spaces abre el repo; OpenShift Serverless escala un modelo
+    llama.cpp desde cero para tool calling. WebLogic permanece como servidor
+    de aplicaciones.
   support: community
   requiredResources:
     - kind: cpu
