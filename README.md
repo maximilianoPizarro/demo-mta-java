@@ -1,12 +1,12 @@
 # Demo MTA: Java 8 a OpenJDK + aptitud a contenedores
 
-[![Open in Dev Spaces](https://img.shields.io/badge/Open%20in-Dev%20Spaces-EE0000?style=for-the-badge&logo=redhat&logoColor=white)](https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java)
+[![Open in Dev Spaces](https://img.shields.io/badge/Open%20in-Dev%20Spaces-EE0000?style=for-the-badge&logo=redhat&logoColor=white)](https://github.com/maximilianoPizarro/demo-mta-java#dev-spaces)
 
 Demo sintética para medir esfuerzo de actualización de Java (8 a 11/17/21) y aptitud a contenedores con Migration Toolkit for Applications.
 
 El mismo repositorio Git alimenta:
 
-1. El build/deploy de la app de ejemplo (Helm)
+1. El build/deploy de la app de ejemplo y las tres conversiones operativas (Helm)
 2. El análisis de MTA (código en `sample-app`, reglas BC4J en `rules/bc4j`)
 3. El workspace de Dev Spaces (IDE + extensión MTA)
 
@@ -16,12 +16,28 @@ Un solo cluster, sin spokes y sin GPU. El Pattern CR de escenario A está en `ex
 
 | Pieza | Chart | Qué hace |
 |---|---|---|
-| MTA | `charts/mta-demo` | Operador, Hub y la app de ejemplo |
+| MTA | `charts/mta-demo` | Operador, Hub, app Java 8 y Routes de las conversiones 11/17/21 |
 | Dev Spaces | `charts/devspaces` | IDE en el browser sobre este repo |
 | Serverless | `charts/openshift-serverless` | Knative Serving |
 | Inferencia CPU | `charts/cpu-inference` | Qwen2.5-Coder-7B con tool calling, escala desde cero |
 
-En el cluster actual:
+### RHDP Field Content
+
+Pedido Field Content CI con:
+
+| Campo | Valor |
+|---|---|
+| Repositorio | `https://github.com/maximilianoPizarro/demo-mta-java.git` |
+| Branch | `main` |
+| GitOps path | **`examples/bootstrap`** |
+| Workers (AWS) | **2 × m5a.4xlarge** (16 vCPU / 64 Gi) |
+| OpenShift AI / AAP | desmarcados |
+| Modelo catálogo | `granite-3-2-8b-instruct` (fallback; la demo usa Qwen en-cluster) |
+| Users | 1 |
+
+El chart `examples/bootstrap` instala el Validated Patterns Operator y el Pattern CR. Publicá estos cambios en `main` antes de pedir el cluster.
+
+En un cluster ya existente:
 
 ```bash
 make deploy
@@ -38,8 +54,12 @@ oc apply -f examples/pattern-cr/hub-only-cpu.yaml
 | Ruta | Rol |
 |------|-----|
 | `sample-app/` | App Maven Java 8 con hallazgos de OpenJDK, cloud-readiness y BC4J simulado |
+| `solutions/java11/` | Conversión operativa a OpenJDK 11 (Base64 + JAXB + cloud readiness) |
+| `solutions/java17/` | Acumulativa a OpenJDK 17 (Date / Thread.stop) |
+| `solutions/java21/` | Acumulativa a OpenJDK 21 (`URI` en lugar de `new URL(String)`) |
 | `rules/bc4j/` | Ruleset custom (certificación ADF/BC4J, no cambio de servidor) |
-| `charts/mta-demo/` | Helm: app + reporte de esfuerzo (Route) + operador MTA Hub (si hay cluster-admin) |
+| `charts/mta-demo/` | Helm: apps + reporte de esfuerzo (Route) + operador MTA Hub (si hay cluster-admin) |
+| `examples/bootstrap/` | Entrypoint RHDP: Subscription del patterns-operator + Pattern CR |
 | `reports/` | HTML de visualización de story points / incidentes (sandbox sin admin) |
 | `devfile.yaml` | Workspace Dev Spaces con Java y extensión MTA |
 
@@ -118,7 +138,8 @@ oc get route,pods,job -n <namespace>
 oc logs -n <namespace> job/mta-demo-mta-demo-mta-bootstrap -f   # solo si mta.enabled=true
 ```
 
-- **App:** `oc get route mta-java-demo -n <namespace>`
+- **App Java 8:** `oc get route mta-java-demo -n <namespace>`
+- **Conversiones:** `oc get route mta-java-11 mta-java-17 mta-java-21 -n <namespace>`
 - **Reporte de esfuerzo (HTML):** `oc get route mta-effort-report -n <namespace>` — story points OpenJDK / cloud-readiness / BC4J
 - **Consola MTA Hub (producto):** solo con `mta.enabled=true` + cluster-admin. Route `*ui*` / `*mta*`. Login: `admin` / `admin`
 - Targets: `openjdk11`, `openjdk17`, `openjdk21`, `cloud-readiness`, `bc4j`
@@ -126,13 +147,13 @@ oc logs -n <namespace> job/mta-demo-mta-demo-mta-bootstrap -f   # solo si mta.en
 
 ## Dev Spaces
 
-El botón **Open in Dev Spaces** abre este repo en el Dev Spaces de este cluster:
+Abrí este repo en el Dev Spaces del cluster:
 
-`https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java`
+`https://devspaces.<apps-domain>/#https://github.com/maximilianoPizarro/demo-mta-java`
 
-Dev Spaces instala al arrancar las extensiones de `.vscode/extensions.json` y `.che/extensions.json` (`redhat.java`, Maven y `redhat.mta-vscode-extension`). El `postStart` copia `.konveyor/provider-settings.yaml` al modelo CPU de este cluster y el build usa JDK 8.
+Dev Spaces instala al arrancar las extensiones de `.vscode/extensions.json` y `.che/extensions.json` (`redhat.java`, Maven y `redhat.mta-vscode-extension`). El `postStart` (`scripts/devspaces-setup.sh`) copia `.konveyor/provider-settings.yaml` y reescribe `baseURL` con el host de la Route `mta-llm` de este cluster. El build de la sample usa JDK 8.
 
-Si el workspace ya estaba abierto, detenerlo y volver a entrar con el botón para que tome este devfile. Perfil de análisis: OpenJDK 11/17/21, cloud-readiness y reglas `rules/bc4j`.
+Si el workspace ya estaba abierto, detenerlo y volver a entrar para que tome este devfile. Perfil de análisis: OpenJDK 11/17/21, cloud-readiness y reglas `rules/bc4j`.
 
 ## Qué mide el esfuerzo
 

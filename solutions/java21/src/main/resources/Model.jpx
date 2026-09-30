@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic ADF Model project descriptor for custom MTA BC4J rules. -->
+<jbo:Project xmlns:jbo="http://xmlns.oracle.com/bc4j"
+             Name="Model"
+             Version="12.2.1.0.0">
+  <DesignTime>
+    <Attr Name="_AppModulePackage" Value="com.example.demo"/>
+  </DesignTime>
+  <Containee Name="DemoAppModule" Package="com.example.demo"
+             ObjectType="AppModule"
+             SuperClass="oracle.jbo.server.ApplicationModuleImpl"/>
+  <Containee Name="CustomerEO" Package="com.example.demo"
+             ObjectType="Entity"
+             SuperClass="oracle.jbo.server.EntityImpl"/>
+  <Containee Name="CustomerVO" Package="com.example.demo"
+             ObjectType="ViewObject"
+             SuperClass="oracle.jbo.server.ViewObjectImpl"/>
+</jbo:Project>

@@ -1,3 +1,4 @@
+{{- if .Values.subscription.enabled }}
 {{- $ns := .Values.subscription.namespace }}
 {{- $name := .Values.subscription.name }}
 {{- $existing := lookup "operators.coreos.com/v1alpha1" "Subscription" $ns $name }}
@@ -13,4 +14,5 @@ spec:
   name: {{ $name | quote }}
   source: {{ .Values.subscription.source | quote }}
   sourceNamespace: {{ .Values.subscription.sourceNamespace | quote }}
+{{- end }}
 {{- end }}

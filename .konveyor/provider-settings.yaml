@@ -1,5 +1,5 @@
 # Copied into the MTA extension global storage on workspace start.
-# CPU inference on this cluster: Qwen2.5-Coder via llama.cpp (tool calling).
+# scripts/devspaces-setup.sh rewrites baseURL to the live mta-llm Route on this cluster.
 environment:
   ALLOW_INSECURE: "true"
 models:
@@ -10,5 +10,5 @@ models:
     args:
       model: "bartowski/Qwen2.5-Coder-7B-Instruct-GGUF:Q4_K_M"
       configuration:
-        baseURL: "https://mta-llm-mta-demo.apps.ocp.wjwzm.sandbox2915.opentlc.com/v1"
+        baseURL: "https://mta-llm-mta-demo.PLACEHOLDER/v1"
 active: *active

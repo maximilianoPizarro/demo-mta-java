@@ -1,4 +1,5 @@
-{{- if .Values.mta.enabled }}
+{{- /* Pattern path installs the operator via values-hub subscriptions. make deploy sets mta.subscription.enabled=true. */}}
+{{- if and .Values.mta.enabled .Values.mta.subscription.enabled }}
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:

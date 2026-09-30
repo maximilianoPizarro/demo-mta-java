@@ -1,5 +1,6 @@
 # Ignore Maven and IDE artifacts
 sample-app/target/
+solutions/*/target/
 .idea/
 *.iml
 .classpath

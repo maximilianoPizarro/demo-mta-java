@@ -28,6 +28,33 @@ app:
   route:
     enabled: true
 
+# Operational OpenJDK conversions (sample-app stays Java 8 for MTA analysis).
+solutions:
+  enabled: true
+  build:
+    enabled: true
+    dockerfilePath: Containerfile
+  port: 8080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  route:
+    enabled: true
+  apps:
+    - name: mta-java-11
+      path: solutions/java11
+    - name: mta-java-17
+      path: solutions/java17
+    - name: mta-java-21
+      path: solutions/java21
+
+# Ingress domain for userinfo URLs (Pattern injects global.localClusterDomain).
+clusterDomain: ""
+
 # Static effort report (HTML) — works on Developer Sandbox without cluster-admin.
 # Full MTA Hub UI still requires mta.enabled=true + cluster-admin.
 reports:
@@ -52,6 +79,9 @@ mta:
   # Requires cluster-admin (OLM Subscription + CRDs). Set false on Developer Sandbox.
   # When true, Hub UI Route shows native effort charts / incidents / inventory.
   enabled: true
+  # Pattern path installs the operator via values-hub. make deploy sets this true.
+  subscription:
+    enabled: false
   channel: stable-v8.2
   source: redhat-operators
   sourceNamespace: openshift-marketplace
@@ -101,6 +131,6 @@ mta:
       enabled: true
   # Job waits for CRD/Hub then POSTs application + analysis task.
   bootstrap:
-    image: quay.io/openshift/origin-cli:4.16
+    image: quay.io/openshift/origin-cli:4.22
     backoffLimit: 6
     activeDeadlineSeconds: 1800

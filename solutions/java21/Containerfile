@@ -1,0 +1,15 @@
+# Build and run on OpenJDK 21 (UBI9).
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.21 AS build
+USER root
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -q package -DskipTests
+
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.21
+USER 185
+WORKDIR /deployments
+COPY --from=build /build/target/mta-java-21-1.0.0-SNAPSHOT.jar ./app.jar
+EXPOSE 8080
+ENV PORT=8080
+ENTRYPOINT ["java", "-jar", "/deployments/app.jar"]

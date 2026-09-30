@@ -1,4 +1,5 @@
-{{- if .Values.mta.enabled }}
+{{- /* Pattern path creates the OperatorGroup with the values-hub subscription. */}}
+{{- if and .Values.mta.enabled .Values.mta.subscription.enabled }}
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:

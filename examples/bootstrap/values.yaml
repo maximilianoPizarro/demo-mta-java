@@ -1,0 +1,27 @@
+# RHDP Field Content CI points GitOps at this chart (path: examples/bootstrap).
+# Injected by agnosticd.core_workloads ocp4_workload_field_content:
+# deployer.domain, deployer.apiUrl, gitops.repoURL, gitops.revision, gitops.path
+# repoURL (capital URL) is what production injects; repoUrl is kept as a fallback.
+
+gitops:
+  repoURL: ""
+  repoUrl: "https://github.com/maximilianoPizarro/demo-mta-java.git"
+  revision: "main"
+
+pattern:
+  name: demo-mta-java
+  clusterGroupName: hub
+  # Hub-only CPU overlay — no spokes / GPU InferenceServices.
+  extraValueFiles:
+    - /values-hub-only.yaml
+
+patternsOperator:
+  channel: fast
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  namespace: openshift-operators
+
+# RHDP injects these; Pattern operator maps the ingress domain to global.localClusterDomain.
+deployer:
+  domain: ""
+  apiUrl: ""

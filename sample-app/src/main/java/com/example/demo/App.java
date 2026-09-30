@@ -38,10 +38,13 @@ public class App {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String body = "<!DOCTYPE html><html><head><title>MTA Java Demo</title></head>"
-                    + "<body><h1>MTA Java Demo</h1>"
+                    + "<body><h1>MTA Java Demo (Java 8)</h1>"
                     + "<p>Synthetic Java 8 sample for OpenJDK and cloud-readiness effort analysis.</p>"
                     + "<p>WebLogic remains the application server target; this process only publishes the sample.</p>"
-                    + "<p><a href=\"https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java\">Open in Dev Spaces</a></p>"
+                    + "<p>Operational conversions on sibling Routes: <strong>mta-java-11</strong>, "
+                    + "<strong>mta-java-17</strong>, <strong>mta-java-21</strong>.</p>"
+                    + "<p>Open this repository in Dev Spaces from the cluster Dev Spaces URL "
+                    + "(<code>https://devspaces.&lt;apps-domain&gt;/#https://github.com/maximilianoPizarro/demo-mta-java</code>).</p>"
                     + "</body></html>";
             byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");

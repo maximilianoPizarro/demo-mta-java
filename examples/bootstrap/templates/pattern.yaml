@@ -1,0 +1,30 @@
+{{- $g := .Values.global | default dict }}
+{{- $gitops := .Values.gitops | default dict }}
+{{- /* core_workloads injects gitops.repoURL; prefer that over the chart default. */}}
+{{- $repo := coalesce (index $gitops "repoURL") (index $gitops "repoUrl") $g.repoURL "https://github.com/maximilianoPizarro/demo-mta-java.git" }}
+{{- $rev := coalesce (index $gitops "revision") $g.targetRevision "main" }}
+apiVersion: gitops.hybrid-cloud-patterns.io/v1alpha1
+kind: Pattern
+metadata:
+  name: {{ .Values.pattern.name | default "demo-mta-java" }}
+  namespace: openshift-operators
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  clusterGroupName: {{ .Values.pattern.clusterGroupName | default "hub" }}
+  gitSpec:
+    targetRepo: {{ $repo | quote }}
+    targetRevision: {{ $rev | quote }}
+  extraValueFiles:
+    {{- if .Values.pattern.extraValueFiles }}
+    {{- toYaml .Values.pattern.extraValueFiles | nindent 4 }}
+    {{- else }}
+    - /values-hub-only.yaml
+    {{- end }}
+  multiSourceConfig:
+    enabled: true
+    clusterGroupChartVersion: "0.9.*"
+    helmRepoUrl: https://charts.validatedpatterns.io
+  gitOpsSpec:
+    manualSync: false

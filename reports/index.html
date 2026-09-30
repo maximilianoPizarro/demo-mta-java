@@ -127,7 +127,17 @@
       Targets: OpenJDK 11 / 17 / 21 · cloud-readiness · BC4J (custom).
       WebLogic permanece como servidor de aplicaciones; este informe no mide un cambio de servidor.
     </p>
-    <a class="devspaces" href="https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#https://github.com/maximilianoPizarro/demo-mta-java">Open in Dev Spaces</a>
+    <a class="devspaces" href="/#https://github.com/maximilianoPizarro/demo-mta-java" id="devspaces-link">Open in Dev Spaces</a>
+    <script>
+      (function () {
+        var host = window.location.hostname;
+        var apps = host.replace(/^[^.]+\./, "");
+        if (apps) {
+          document.getElementById("devspaces-link").href =
+            "https://devspaces." + apps + "/#https://github.com/maximilianoPizarro/demo-mta-java";
+        }
+      })();
+    </script>
   </header>
   <main>
     <div class="grid">

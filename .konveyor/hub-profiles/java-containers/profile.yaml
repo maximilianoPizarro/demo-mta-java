@@ -1,0 +1,8 @@
+metadata:
+  id: java-containers
+  name: Java 8 to OpenJDK and containers
+spec:
+  labelSelector: "(konveyor.io/target=openjdk11 || konveyor.io/target=openjdk17 || konveyor.io/target=openjdk21 || konveyor.io/target=cloud-readiness || konveyor.io/target=bc4j)"
+  useDefaultRules: true
+  customRules:
+    - ../../../rules/bc4j

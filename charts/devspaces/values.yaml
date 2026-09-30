@@ -1,4 +1,6 @@
 subscription:
+  # Pattern path installs via values-hub. make deploy sets enabled=true.
+  enabled: false
   name: devspaces
   namespace: openshift-operators
   channel: stable
@@ -8,5 +10,5 @@ che:
   namespace: openshift-devspaces
   name: devspaces
 bootstrap:
-  image: quay.io/openshift/origin-cli:4.16
+  image: quay.io/openshift/origin-cli:4.22
   activeDeadlineSeconds: 1800

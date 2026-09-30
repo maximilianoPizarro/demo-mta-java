@@ -1,12 +1,19 @@
 MTA Java Demo installed in namespace {{ .Release.Namespace }}.
 
 {{- if .Values.app.enabled }}
-Application
+Application (Java 8 sample — MTA analysis source)
   Route: oc get route {{ include "mta-demo.appName" . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}{"\n"}'
   {{- if not .Values.app.build.enabled }}
   Binary build:
     oc start-build {{ include "mta-demo.appName" . }} -n {{ .Release.Namespace }} --from-dir=./sample-app --follow
   {{- end }}
+{{- end }}
+
+{{- if .Values.solutions.enabled }}
+OpenJDK conversions (operational)
+{{- range .Values.solutions.apps }}
+  {{ .name }}: oc get route {{ .name }} -n {{ $.Release.Namespace }} -o jsonpath='{.spec.host}{"\n"}'
+{{- end }}
 {{- end }}
 
 {{- if .Values.reports.enabled }}
@@ -44,4 +51,5 @@ CPU tool-calling model (always-on Deployment)
   Route: oc get route {{ include "mta-demo.fullname" . }}-llm -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}{"\n"}'
 {{- end }}
 
-Dev Spaces: https://devspaces.apps.ocp.wjwzm.sandbox2915.opentlc.com/#{{ .Values.git.uri }}
+Dev Spaces: https://devspaces.<apps-domain>/#{{ .Values.git.uri }}
+RHDP GitOps path: examples/bootstrap

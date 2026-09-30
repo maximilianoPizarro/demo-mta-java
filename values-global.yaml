@@ -2,6 +2,8 @@
 global:
   pattern: demo-mta-java
   singleArgoCD: true
+  # Reuse the OpenShift GitOps instance RHDP already installed (no second Argo CD).
+  vpArgoNamespace: openshift-gitops
   options:
     useCSV: false
     syncPolicy: Automatic

@@ -1,4 +1,6 @@
 subscription:
+  # Pattern path installs via values-hub. make deploy sets enabled=true.
+  enabled: false
   name: serverless-operator
   namespace: openshift-operators
   channel: stable
@@ -7,5 +9,5 @@ subscription:
 serving:
   namespace: knative-serving
 bootstrap:
-  image: quay.io/openshift/origin-cli:4.16
+  image: quay.io/openshift/origin-cli:4.22
   activeDeadlineSeconds: 1800
