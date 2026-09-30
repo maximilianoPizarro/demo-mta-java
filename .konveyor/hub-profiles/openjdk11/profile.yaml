@@ -1,0 +1,6 @@
+metadata:
+  id: openjdk11
+  name: OpenJDK 11
+spec:
+  labelSelector: "(konveyor.io/target=openjdk11)"
+  useDefaultRules: true

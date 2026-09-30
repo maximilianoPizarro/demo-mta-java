@@ -1,0 +1,6 @@
+metadata:
+  id: cloud-readiness
+  name: Cloud readiness
+spec:
+  labelSelector: "(konveyor.io/target=cloud-readiness)"
+  useDefaultRules: true

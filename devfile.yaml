@@ -48,6 +48,48 @@ commands:
       group:
         kind: run
         isDefault: true
+  - id: install-mta-cli
+    exec:
+      component: tools
+      commandLine: bash scripts/install-mta-cli.sh && export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH" && mta-cli version || mta-cli --help | head -5
+      workingDir: ${PROJECT_SOURCE}
+      label: Install MTA CLI
+  - id: analyze-openjdk11
+    exec:
+      component: tools
+      commandLine: export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH"; bash scripts/install-mta-cli.sh; bash scripts/mta-cli-analyze.sh openjdk11
+      workingDir: ${PROJECT_SOURCE}
+      label: MTA report OpenJDK 11
+  - id: analyze-openjdk17
+    exec:
+      component: tools
+      commandLine: export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH"; bash scripts/install-mta-cli.sh; bash scripts/mta-cli-analyze.sh openjdk17
+      workingDir: ${PROJECT_SOURCE}
+      label: MTA report OpenJDK 17
+  - id: analyze-openjdk21
+    exec:
+      component: tools
+      commandLine: export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH"; bash scripts/install-mta-cli.sh; bash scripts/mta-cli-analyze.sh openjdk21
+      workingDir: ${PROJECT_SOURCE}
+      label: MTA report OpenJDK 21
+  - id: analyze-cloud-readiness
+    exec:
+      component: tools
+      commandLine: export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH"; bash scripts/install-mta-cli.sh; bash scripts/mta-cli-analyze.sh cloud-readiness
+      workingDir: ${PROJECT_SOURCE}
+      label: MTA report cloud-readiness
+  - id: analyze-bc4j
+    exec:
+      component: tools
+      commandLine: export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH"; bash scripts/install-mta-cli.sh; bash scripts/mta-cli-analyze.sh bc4j
+      workingDir: ${PROJECT_SOURCE}
+      label: MTA report BC4J
+  - id: analyze-all
+    exec:
+      component: tools
+      commandLine: export PATH="${PROJECT_SOURCE}/.tools/bin:$PATH"; bash scripts/install-mta-cli.sh; bash scripts/mta-cli-analyze.sh all
+      workingDir: ${PROJECT_SOURCE}
+      label: MTA reports all targets
   - id: devspaces-setup
     exec:
       component: tools

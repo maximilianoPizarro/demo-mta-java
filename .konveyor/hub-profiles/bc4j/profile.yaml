@@ -1,0 +1,8 @@
+metadata:
+  id: bc4j
+  name: BC4J certification (WebLogic stays)
+spec:
+  labelSelector: "(konveyor.io/target=bc4j)"
+  useDefaultRules: true
+  customRules:
+    - ../../../rules/bc4j

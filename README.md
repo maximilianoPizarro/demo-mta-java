@@ -57,6 +57,9 @@ oc apply -f examples/pattern-cr/hub-only-cpu.yaml
 | `solutions/java11/` | Conversión operativa a OpenJDK 11 (Base64 + JAXB + cloud readiness) |
 | `solutions/java17/` | Acumulativa a OpenJDK 17 (Date / Thread.stop) |
 | `solutions/java21/` | Acumulativa a OpenJDK 21 (`URI` en lugar de `new URL(String)`) |
+| `scripts/mta-cli-analyze.sh` | Un análisis MTA CLI por target (o `all`); pensado para Dev Spaces |
+| `scripts/install-mta-cli.sh` | Instala `mta-cli`/`kantra` en `.tools/bin` |
+| `.konveyor/hub-profiles/` | Perfiles por reporte (`openjdk11`, `openjdk17`, `openjdk21`, `cloud-readiness`, `bc4j`) |
 | `rules/bc4j/` | Ruleset custom (certificación ADF/BC4J, no cambio de servidor) |
 | `charts/mta-demo/` | Helm: apps + reporte de esfuerzo (Route) + operador MTA Hub (si hay cluster-admin) |
 | `examples/bootstrap/` | Entrypoint RHDP: Subscription del patterns-operator + Pattern CR |
@@ -157,7 +160,63 @@ Abrí este repo en el Dev Spaces del cluster:
 
 Dev Spaces instala al arrancar las extensiones de `.vscode/extensions.json` y `.che/extensions.json` (`redhat.java`, Maven y `redhat.mta-vscode-extension`). El `postStart` (`scripts/devspaces-setup.sh`) copia `.konveyor/provider-settings.yaml` y reescribe `baseURL` con el host de la Route `mta-llm` de este cluster. El build de la sample usa JDK 8.
 
-Si el workspace ya estaba abierto, detenerlo y volver a entrar para que tome este devfile. Perfil de análisis: OpenJDK 11/17/21, cloud-readiness y reglas `rules/bc4j`.
+Si el workspace ya estaba abierto, detenerlo y volver a entrar para que tome este devfile. Perfiles de análisis (extensión MTA y CLI): OpenJDK 11/17/21, cloud-readiness y BC4J en `.konveyor/hub-profiles/`.
+
+### Análisis con MTA CLI (también desde Dev Spaces)
+
+Cada target genera su propio HTML en `mta-output/<target>/static-report/index.html`. Entrada siempre: `sample-app/` (Java 8). Las conversiones en `solutions/` son el resultado operativo, no la fuente del análisis.
+
+**1. Terminal de Dev Spaces** (o local con Podman/Docker opcional; por defecto va en modo containerless):
+
+```bash
+cd ${PROJECT_SOURCE:-$(pwd)}
+bash scripts/install-mta-cli.sh
+export PATH="$PWD/.tools/bin:$PATH"
+```
+
+Si tenés el binario oficial de Red Hat, podés saltar el install y usar `MTA_CLI_URL` o un `mta-cli` ya en el `PATH`. El script de install usa Kantra upstream como fallback abierto.
+
+**2. Un reporte por target** — mismos pasos en Dev Spaces (menú **Run Task** / comandos del `devfile.yaml`) o en la terminal:
+
+| Reporte | Qué mide | Comando CLI / task Dev Spaces |
+|---|---|---|
+| OpenJDK 11 | APIs removidas o cambiadas hacia 11 (`sun.misc`, JAXB, …) | `bash scripts/mta-cli-analyze.sh openjdk11` · task **MTA report OpenJDK 11** |
+| OpenJDK 17 | Hallazgos hacia 17 (p. ej. `Thread.stop`, `Date` deprecado) | `bash scripts/mta-cli-analyze.sh openjdk17` · task **MTA report OpenJDK 17** |
+| OpenJDK 21 | Hallazgos hacia 21 (p. ej. `new URL(String)`) | `bash scripts/mta-cli-analyze.sh openjdk21` · task **MTA report OpenJDK 21** |
+| cloud-readiness | Aptitud a contenedores (filesystem, localhost, logs) | `bash scripts/mta-cli-analyze.sh cloud-readiness` · task **MTA report cloud-readiness** |
+| BC4J | Certificar ADF/BC4J en el JDK e imagen WebLogic (**sin** migrar de servidor) | `bash scripts/mta-cli-analyze.sh bc4j` · task **MTA report BC4J** |
+
+Equivalente manual (sin el wrapper), útil si ya tenés `mta-cli` en el PATH:
+
+```bash
+# OpenJDK 11
+mta-cli analyze --input sample-app --output mta-output/openjdk11 --target openjdk11 --mode source-only --overwrite
+
+# OpenJDK 17
+mta-cli analyze --input sample-app --output mta-output/openjdk17 --target openjdk17 --mode source-only --overwrite
+
+# OpenJDK 21
+mta-cli analyze --input sample-app --output mta-output/openjdk21 --target openjdk21 --mode source-only --overwrite
+
+# Cloud readiness
+mta-cli analyze --input sample-app --output mta-output/cloud-readiness --target cloud-readiness --mode source-only --overwrite
+
+# BC4J (reglas custom en rules/bc4j)
+mta-cli analyze --input sample-app --output mta-output/bc4j --target bc4j --rules rules/bc4j --mode source-only --overwrite
+```
+
+**3. Los cinco de una vez:**
+
+```bash
+bash scripts/mta-cli-analyze.sh all
+# o task Dev Spaces: MTA reports all targets
+```
+
+**4. Abrir el HTML:** en Dev Spaces, clic derecho sobre `mta-output/<target>/static-report/index.html` → Open With → Preview / Simple Browser. En local: abrí ese archivo en el navegador.
+
+**5. Extensión MTA (UI):** además del CLI, en Dev Spaces podés elegir el perfil en `.konveyor/hub-profiles/` (`openjdk11`, `openjdk17`, `openjdk21`, `cloud-readiness`, `bc4j`, o `java-containers` para todos juntos) y lanzar el análisis desde la vista Migration Toolkit for Applications.
+
+Guía oficial CLI: [Using the MTA command-line interface](https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.1/html/using_the_migration_toolkit_for_applications_command-line_interface/index).
 
 ## Qué mide el esfuerzo
 
