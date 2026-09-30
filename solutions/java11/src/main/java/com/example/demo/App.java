@@ -24,6 +24,7 @@ public class App {
         HardcodedNetwork.pingLocalService();
         FileLogger.log("App starting on port " + port);
         Bc4jApplicationModule.describeModel();
+        DemoFindings.exercise();
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new RootHandler());
@@ -42,7 +43,8 @@ public class App {
                     + "<h2>What changed from Java 8</h2>"
                     + "<ul>"
                     + "<li><code>sun.misc.BASE64Encoder</code> → <code>java.util.Base64</code></li>"
-                    + "<li><code>javax.xml.bind</code> shipped as an explicit Maven dependency (API + runtime)</li>"
+                    + "<li><code>sun.misc.Unsafe</code> offset/monitor calls → <code>VarHandle</code></li>"
+                    + "<li><code>javax.xml.bind</code>, <code>javax.activation</code> and <code>javax.annotation</code> shipped as explicit Maven dependencies</li>"
                     + "<li>Cloud readiness: marker under <code>/tmp</code>, health URL from env, logs to stdout</li>"
                     + "<li>BC4J metadata kept for JDK / container certification (no app-server migration)</li>"
                     + "</ul>"

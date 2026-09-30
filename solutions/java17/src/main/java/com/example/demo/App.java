@@ -24,6 +24,7 @@ public class App {
         HardcodedNetwork.pingLocalService();
         FileLogger.log("App starting on port " + port);
         Bc4jApplicationModule.describeModel();
+        DemoFindings.exercise();
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new RootHandler());
@@ -49,6 +50,7 @@ public class App {
                     + "<ul>"
                     + "<li><code>Date(int,int,int)</code> → <code>java.time.LocalDate</code></li>"
                     + "<li><code>Thread.stop()</code> → <code>Thread.interrupt()</code></li>"
+                    + "<li>Security Manager, <code>AccessController</code> and Applet API removed from this conversion</li>"
                     + "<li><code>compiler.release</code> 17</li>"
                     + "</ul>"
                     + "<p>Sibling Routes: Java 8 sample · Java 11 · this app · Java 21</p>"

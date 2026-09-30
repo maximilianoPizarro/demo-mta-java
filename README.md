@@ -55,7 +55,7 @@ oc apply -f examples/pattern-cr/hub-only-cpu.yaml
 
 | Ruta | Rol |
 |------|-----|
-| `sample-app/` | App Maven Java 8 con hallazgos de OpenJDK, cloud-readiness y BC4J simulado |
+| `sample-app/` | App Maven Java 8 con una matriz curada de hallazgos OpenJDK, cloud-readiness y BC4J |
 | `solutions/java11/` | Conversión operativa a OpenJDK 11 (Base64 + JAXB + cloud readiness) |
 | `solutions/java17/` | Acumulativa a OpenJDK 17 (Date / Thread.stop) |
 | `solutions/java21/` | Acumulativa a OpenJDK 21 (`URI` en lugar de `new URL(String)`) |
@@ -167,6 +167,8 @@ Si el workspace ya estaba abierto, detenerlo y volver a entrar para que tome est
 ### Análisis con MTA CLI (también desde Dev Spaces)
 
 Cada target genera su propio HTML en `mta-output/<target>/static-report/index.html`. Entrada siempre: `sample-app/` (Java 8). Las conversiones en `solutions/` son el resultado operativo, no la fuente del análisis.
+
+El ejemplo trae a propósito una matriz de Issues (no un solo archivo): `sun.misc` (BASE64 y Unsafe), módulos EE que salen del JDK (`javax.activation`, `javax.annotation`), Security Manager y Applets, charset implícito / `finalize` / `Subject.doAs`, localhost y filesystem, sockets/RMI, y BC4J en clases Java además del `.jpx`. Cloud-readiness y BC4J se dejan en `solutions/` como deuda de certificación. Tras cambiar el ejemplo, regenerá los reportes con `make analyze-all && make publish-reports`.
 
 **1. Terminal de Dev Spaces** (o local con Podman/Docker opcional; por defecto va en modo containerless):
 

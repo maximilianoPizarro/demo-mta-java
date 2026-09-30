@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-30T17:59:30Z",
+  "generatedAt": "2026-09-30T18:24:11Z",
   "input": "sample-app (Java 8)",
   "mode": "source-only",
   "cliVersion": "8.3.0",
@@ -9,13 +9,44 @@
       "title": "OpenJDK 11",
       "subtitle": "Java 8 → 11 (APIs removidas / cambiadas)",
       "application": "sample-app",
-      "incidents": 2,
-      "storyPoints": 4,
+      "incidents": 13,
+      "storyPoints": 15,
       "categories": {
-        "mandatory": 2
+        "mandatory": 13
       },
-      "rulesetsWithHits": 2,
+      "rulesetsWithHits": 3,
       "topViolations": [
+        {
+          "rule": "java-removals-00110",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 5,
+          "description": "Methods in `sun.misc.Unsafe` have been removed",
+          "files": [
+            "src/main/java/com/example/demo/LegacyUnsafeDemo.java"
+          ]
+        },
+        {
+          "rule": "hardcoded-ip-address",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 3,
+          "description": "Hardcoded IP Address",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
+            "src/main/java/com/example/demo/EmbeddedSocketProbe.java"
+          ]
+        },
+        {
+          "rule": "removed-javaee-modules-00020",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 2,
+          "description": "The java.annotation (Common Annotations) module has been removed from OpenJDK 11",
+          "files": [
+            "src/main/java/com/example/demo/JavaxEeApisDemo.java"
+          ]
+        },
         {
           "rule": "oracle2openjdk-00006",
           "category": "mandatory",
@@ -34,6 +65,16 @@
           "description": "The `sun.misc.BASE64` class has been removed.",
           "files": [
             "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        },
+        {
+          "rule": "removed-javaee-modules-00000",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The java.activation (JAF) module has been removed from OpenJDK 11",
+          "files": [
+            "src/main/java/com/example/demo/JavaxEeApisDemo.java"
           ]
         }
       ],
@@ -44,13 +85,74 @@
       "title": "OpenJDK 17",
       "subtitle": "Java 8 → 17 (deprecaciones y remociones)",
       "application": "sample-app",
-      "incidents": 2,
-      "storyPoints": 4,
+      "incidents": 18,
+      "storyPoints": 38,
       "categories": {
-        "mandatory": 2
+        "mandatory": 18
       },
-      "rulesetsWithHits": 2,
+      "rulesetsWithHits": 4,
       "topViolations": [
+        {
+          "rule": "java-removals-00110",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 5,
+          "description": "Methods in `sun.misc.Unsafe` have been removed",
+          "files": [
+            "src/main/java/com/example/demo/LegacyUnsafeDemo.java"
+          ]
+        },
+        {
+          "rule": "hardcoded-ip-address",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 3,
+          "description": "Hardcoded IP Address",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
+            "src/main/java/com/example/demo/EmbeddedSocketProbe.java"
+          ]
+        },
+        {
+          "rule": "security-manager-deprecation-00000",
+          "category": "mandatory",
+          "effort": 5,
+          "incidents": 2,
+          "description": "The Java Security Manager class has been deprecated.",
+          "files": [
+            "src/main/java/com/example/demo/SecurityManagerDemo.java"
+          ]
+        },
+        {
+          "rule": "security-manager-deprecation-00010",
+          "category": "mandatory",
+          "effort": 5,
+          "incidents": 2,
+          "description": "References to the Java Security Manager API have been deprecated",
+          "files": [
+            "src/main/java/com/example/demo/SecurityManagerDemo.java"
+          ]
+        },
+        {
+          "rule": "removed-javaee-modules-00020",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 2,
+          "description": "The java.annotation (Common Annotations) module has been removed from OpenJDK 11",
+          "files": [
+            "src/main/java/com/example/demo/JavaxEeApisDemo.java"
+          ]
+        },
+        {
+          "rule": "applet-api-deprecation-00000",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "The Java Applet API has been deprecated",
+          "files": [
+            "src/main/java/com/example/demo/AppletLegacyDemo.java"
+          ]
+        },
         {
           "rule": "oracle2openjdk-00006",
           "category": "mandatory",
@@ -69,6 +171,16 @@
           "description": "The `sun.misc.BASE64` class has been removed.",
           "files": [
             "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        },
+        {
+          "rule": "removed-javaee-modules-00000",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The java.activation (JAF) module has been removed from OpenJDK 11",
+          "files": [
+            "src/main/java/com/example/demo/JavaxEeApisDemo.java"
           ]
         }
       ],
@@ -79,23 +191,105 @@
       "title": "OpenJDK 21",
       "subtitle": "Java 8 → 21 (APIs modernas vs legacy)",
       "application": "sample-app",
-      "incidents": 4,
-      "storyPoints": 6,
+      "incidents": 27,
+      "storyPoints": 51,
       "categories": {
-        "mandatory": 2,
-        "potential": 2
+        "mandatory": 18,
+        "potential": 9
       },
-      "rulesetsWithHits": 3,
+      "rulesetsWithHits": 5,
       "topViolations": [
+        {
+          "rule": "java-removals-00110",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 5,
+          "description": "Methods in `sun.misc.Unsafe` have been removed",
+          "files": [
+            "src/main/java/com/example/demo/LegacyUnsafeDemo.java"
+          ]
+        },
         {
           "rule": "utf-8-by-default-00000",
           "category": "potential",
           "effort": 1,
-          "incidents": 2,
+          "incidents": 5,
           "description": "The 'java.io' constructor defaults to UTF-8",
           "files": [
             "src/main/java/com/example/demo/FileLogger.java",
-            "src/main/java/com/example/demo/LocalFilesystem.java"
+            "src/main/java/com/example/demo/LocalFilesystem.java",
+            "src/main/java/com/example/demo/ModernJdkDeprecations.java"
+          ]
+        },
+        {
+          "rule": "hardcoded-ip-address",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 3,
+          "description": "Hardcoded IP Address",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
+            "src/main/java/com/example/demo/EmbeddedSocketProbe.java"
+          ]
+        },
+        {
+          "rule": "security-manager-deprecation-00000",
+          "category": "mandatory",
+          "effort": 5,
+          "incidents": 2,
+          "description": "The Java Security Manager class has been deprecated.",
+          "files": [
+            "src/main/java/com/example/demo/SecurityManagerDemo.java"
+          ]
+        },
+        {
+          "rule": "security-manager-deprecation-00010",
+          "category": "mandatory",
+          "effort": 5,
+          "incidents": 2,
+          "description": "References to the Java Security Manager API have been deprecated",
+          "files": [
+            "src/main/java/com/example/demo/SecurityManagerDemo.java"
+          ]
+        },
+        {
+          "rule": "removed-javaee-modules-00020",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 2,
+          "description": "The java.annotation (Common Annotations) module has been removed from OpenJDK 11",
+          "files": [
+            "src/main/java/com/example/demo/JavaxEeApisDemo.java"
+          ]
+        },
+        {
+          "rule": "applet-api-deprecation-00000",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "The Java Applet API has been deprecated",
+          "files": [
+            "src/main/java/com/example/demo/AppletLegacyDemo.java"
+          ]
+        },
+        {
+          "rule": "deprecation-00000",
+          "category": "potential",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Deprecated method in JDK 18 for removal in future release",
+          "files": [
+            "src/main/java/com/example/demo/ModernJdkDeprecations.java"
+          ]
+        },
+        {
+          "rule": "finalization-deprecation-00000",
+          "category": "potential",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Finalization has been deprecated for removal in a future release by JDK18.",
+          "files": [
+            "src/main/java/com/example/demo/ModernJdkDeprecations.java"
           ]
         },
         {
@@ -117,6 +311,36 @@
           "files": [
             "src/main/java/com/example/demo/LegacyEncoding.java"
           ]
+        },
+        {
+          "rule": "removed-javaee-modules-00000",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The java.activation (JAF) module has been removed from OpenJDK 11",
+          "files": [
+            "src/main/java/com/example/demo/JavaxEeApisDemo.java"
+          ]
+        },
+        {
+          "rule": "utf-8-by-default-00020",
+          "category": "potential",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The java.net.URLEncoder.encode method uses UTF-8 by default",
+          "files": [
+            "src/main/java/com/example/demo/ModernJdkDeprecations.java"
+          ]
+        },
+        {
+          "rule": "utf-8-by-default-00030",
+          "category": "potential",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The java.net.URLDecoder.decode method uses UTF-8 by default",
+          "files": [
+            "src/main/java/com/example/demo/ModernJdkDeprecations.java"
+          ]
         }
       ],
       "reportPath": "openjdk21/"
@@ -126,43 +350,88 @@
       "title": "Cloud readiness",
       "subtitle": "Filesystem, localhost, logs → contenedores",
       "application": "sample-app",
-      "incidents": 6,
-      "storyPoints": 16,
+      "incidents": 24,
+      "storyPoints": 64,
       "categories": {
-        "mandatory": 5,
-        "optional": 1
+        "mandatory": 20,
+        "optional": 4
       },
-      "rulesetsWithHits": 1,
+      "rulesetsWithHits": 2,
       "topViolations": [
         {
           "rule": "local-storage-00001",
           "category": "mandatory",
           "effort": 1,
-          "incidents": 3,
+          "incidents": 9,
           "description": "File system - Java IO",
           "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
             "src/main/java/com/example/demo/FileLogger.java",
-            "src/main/java/com/example/demo/LocalFilesystem.java"
-          ]
-        },
-        {
-          "rule": "localhost-http-00001",
-          "category": "mandatory",
-          "effort": 7,
-          "incidents": 1,
-          "description": "Local HTTP Calls",
-          "files": [
-            "src/main/java/com/example/demo/HardcodedNetwork.java"
+            "src/main/java/com/example/demo/LocalFilesystem.java",
+            "src/main/java/com/example/demo/ModernJdkDeprecations.java"
           ]
         },
         {
           "rule": "socket-communication-00000",
           "category": "optional",
           "effort": 5,
-          "incidents": 1,
+          "incidents": 4,
           "description": "Socket communication",
           "files": [
-            "src/main/java/com/example/demo/App.java"
+            "src/main/java/com/example/demo/App.java",
+            "src/main/java/com/example/demo/EmbeddedSocketProbe.java"
+          ]
+        },
+        {
+          "rule": "hardcoded-ip-address",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 3,
+          "description": "Hardcoded IP Address",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
+            "src/main/java/com/example/demo/EmbeddedSocketProbe.java"
+          ]
+        },
+        {
+          "rule": "localhost-http-00001",
+          "category": "mandatory",
+          "effort": 7,
+          "incidents": 2,
+          "description": "Local HTTP Calls",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
+            "src/main/java/com/example/demo/HardcodedNetwork.java"
+          ]
+        },
+        {
+          "rule": "jni-native-code-00001",
+          "category": "mandatory",
+          "effort": 7,
+          "incidents": 1,
+          "description": "Java Native Processes",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java"
+          ]
+        },
+        {
+          "rule": "localhost-jdbc-00002",
+          "category": "mandatory",
+          "effort": 7,
+          "incidents": 1,
+          "description": "Local JDBC Calls",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java"
+          ]
+        },
+        {
+          "rule": "java-rmi-00000",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "Java Remote Method Invocation (RMI) service",
+          "files": [
+            "src/main/java/com/example/demo/LegacyRemoteProbe.java"
           ]
         },
         {
@@ -174,6 +443,26 @@
           "files": [
             "src/main/java/com/example/demo/HardcodedNetwork.java"
           ]
+        },
+        {
+          "rule": "local-storage-00005",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "File system - Java NIO",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java"
+          ]
+        },
+        {
+          "rule": "logging-0000",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "Logging to file system",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java"
+          ]
         }
       ],
       "reportPath": "cloud-readiness/"
@@ -183,22 +472,24 @@
       "title": "BC4J / ADF",
       "subtitle": "Certificar ADF en JDK + WebLogic contenedorizado",
       "application": "sample-app",
-      "incidents": 15,
-      "storyPoints": 50,
+      "incidents": 22,
+      "storyPoints": 63,
       "categories": {
-        "mandatory": 6,
-        "potential": 9
+        "mandatory": 11,
+        "potential": 11
       },
-      "rulesetsWithHits": 1,
+      "rulesetsWithHits": 2,
       "topViolations": [
         {
           "rule": "bc4j-package-import-00001",
           "category": "potential",
           "effort": 2,
-          "incidents": 7,
+          "incidents": 9,
           "description": "oracle.jbo package usage detected",
           "files": [
             "src/main/java/com/example/demo/Bc4jApplicationModule.java",
+            "src/main/java/com/example/demo/Bc4jCustomerEntity.java",
+            "src/main/java/com/example/demo/Bc4jOrderView.java",
             "src/main/resources/Model.jpx",
             "src/main/resources/bc4j.xcfg"
           ]
@@ -216,6 +507,17 @@
           ]
         },
         {
+          "rule": "hardcoded-ip-address",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 3,
+          "description": "Hardcoded IP Address",
+          "files": [
+            "src/main/java/com/example/demo/CloudLocalhostClients.java",
+            "src/main/java/com/example/demo/EmbeddedSocketProbe.java"
+          ]
+        },
+        {
           "rule": "bc4j-config-files-00001",
           "category": "potential",
           "effort": 5,
@@ -230,9 +532,10 @@
           "rule": "bc4j-entity-impl-00001",
           "category": "mandatory",
           "effort": 3,
-          "incidents": 1,
+          "incidents": 2,
           "description": "Oracle BC4J EntityImpl detected",
           "files": [
+            "src/main/java/com/example/demo/Bc4jCustomerEntity.java",
             "src/main/resources/Model.jpx"
           ]
         },
@@ -240,9 +543,10 @@
           "rule": "bc4j-view-object-00001",
           "category": "mandatory",
           "effort": 3,
-          "incidents": 1,
+          "incidents": 2,
           "description": "Oracle BC4J ViewObjectImpl detected",
           "files": [
+            "src/main/java/com/example/demo/Bc4jOrderView.java",
             "src/main/resources/Model.jpx"
           ]
         }
@@ -251,7 +555,7 @@
     }
   ],
   "totals": {
-    "incidents": 29,
-    "storyPoints": 80
+    "incidents": 104,
+    "storyPoints": 231
   }
 }

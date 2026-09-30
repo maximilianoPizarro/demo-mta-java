@@ -24,6 +24,7 @@ public class App {
         HardcodedNetwork.pingLocalService();
         FileLogger.log("App starting on port " + port);
         Bc4jApplicationModule.describeModel();
+        DemoFindings.exercise();
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new RootHandler());
@@ -49,6 +50,7 @@ public class App {
                     + "<h2>New in Java 21</h2>"
                     + "<ul>"
                     + "<li><code>new URL(String)</code> → <code>URI.create(…).toURL()</code></li>"
+                    + "<li>Charset constructors and <code>URLEncoder</code>/<code>URLDecoder</code> take <code>UTF-8</code> explicitly; no <code>finalize()</code> or <code>Subject.doAs</code></li>"
                     + "<li><code>compiler.release</code> 21</li>"
                     + "</ul>"
                     + "<p>Sibling Routes: Java 8 sample · Java 11 · Java 17 · this app</p>"

@@ -25,6 +25,7 @@ public class App {
         HardcodedNetwork.pingLocalService();
         FileLogger.log("App starting on port " + port);
         Bc4jApplicationModule.describeModel();
+        DemoFindings.exercise();
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new RootHandler());

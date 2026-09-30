@@ -16,11 +16,16 @@ public final class DeprecatedApis {
         return new Date(2020 - 1900, 0, 1);
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"deprecation", "removal"})
     public static void forceStopWorker(Thread worker) {
-        // Thread.stop removed in later JDKs; kept here as a deliberate OpenJDK finding.
-        if (worker != null && worker.isAlive()) {
+        // Thread.stop() is deprecated for removal (OpenJDK 18+ rule). Java 8 still compiles it.
+        if (worker == null) {
+            return;
+        }
+        try {
             worker.stop();
+        } catch (Throwable ignored) {
+            // Not started, or the runtime rejects stop(); the call site is what MTA flags.
         }
     }
 }
