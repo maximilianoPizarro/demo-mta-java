@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Comparación de reportes MTA CLI (OpenJDK 11/17/21, cloud-readiness, BC4J) sobre sample-app Java 8."
+    />
+    <title>MTA reports · demo-mta-java</title>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --panel: #1a222c;
+        --panel-2: #232d3a;
+        --line: #334155;
+        --text: #e8eef5;
+        --muted: #94a3b8;
+        --accent: #ee0000;
+        --accent-soft: rgba(238, 0, 0, 0.14);
+        --ok: #3ba55d;
+        --warn: #f0a202;
+        --mandatory: #ee0000;
+        --optional: #3b82f6;
+        --potential: #f59e0b;
+        --info: #94a3b8;
+        --mono: "IBM Plex Mono", "Cascadia Code", "Consolas", ui-monospace, monospace;
+        --sans: "Red Hat Text", "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--sans);
+        color: var(--text);
+        background:
+          radial-gradient(1200px 600px at 10% -10%, rgba(238, 0, 0, 0.18), transparent 55%),
+          radial-gradient(900px 500px at 100% 0%, rgba(59, 130, 246, 0.1), transparent 50%),
+          linear-gradient(180deg, #0b1015 0%, var(--bg) 40%, #0c1218 100%);
+      }
+
+      a {
+        color: #93c5fd;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      a:hover {
+        color: #bfdbfe;
+      }
+
+      .wrap {
+        width: min(1120px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2.5rem 0 4rem;
+      }
+
+      header {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        background: var(--accent);
+        border-radius: 1px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.75rem, 3vw, 2.4rem);
+        line-height: 1.15;
+        font-weight: 650;
+      }
+
+      .lede {
+        margin: 0;
+        max-width: 62ch;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.55;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem 1rem;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+      }
+
+      .meta strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .totals {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+        margin: 1.5rem 0 2rem;
+      }
+
+      @media (max-width: 720px) {
+        .totals {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .stat {
+        background: linear-gradient(180deg, var(--panel-2), var(--panel));
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 1rem 1.1rem;
+      }
+
+      .stat .label {
+        color: var(--muted);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .stat .value {
+        margin-top: 0.35rem;
+        font-size: 1.85rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+      }
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1.15rem 1.2rem 1.2rem;
+        min-height: 100%;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+
+      .card .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+      }
+
+      .metric {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 8px;
+        padding: 0.55rem 0.7rem;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .metric strong {
+        font-size: 1.2rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .cats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.75rem;
+        border: 1px solid transparent;
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--muted);
+      }
+
+      .pill.mandatory {
+        background: var(--accent-soft);
+        border-color: rgba(238, 0, 0, 0.35);
+        color: #fecaca;
+      }
+
+      .pill.optional {
+        background: rgba(59, 130, 246, 0.14);
+        border-color: rgba(59, 130, 246, 0.35);
+        color: #bfdbfe;
+      }
+
+      .pill.potential {
+        background: rgba(245, 158, 11, 0.14);
+        border-color: rgba(245, 158, 11, 0.35);
+        color: #fde68a;
+      }
+
+      .pill.information {
+        background: rgba(148, 163, 184, 0.14);
+        border-color: rgba(148, 163, 184, 0.3);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 2rem;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 0.75rem 0.9rem;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: rgba(0, 0, 0, 0.25);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      td.num {
+        font-variant-numeric: tabular-nums;
+        font-family: var(--mono);
+        font-size: 0.9rem;
+      }
+
+      .violations {
+        margin-top: 0.25rem;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .violations li {
+        font-size: 0.82rem;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .violations code {
+        color: #f8fafc;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+      }
+
+      .actions {
+        margin-top: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        padding-top: 0.35rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        border-radius: 8px;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        text-decoration: none;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        color: #fff;
+        filter: brightness(1.08);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        border-color: var(--line);
+        color: var(--text);
+      }
+
+      .btn-ghost:hover {
+        border-color: #64748b;
+        color: #fff;
+      }
+
+      footer {
+        margin-top: 2.5rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+
+      .error {
+        padding: 1rem 1.1rem;
+        border: 1px solid rgba(238, 0, 0, 0.4);
+        background: var(--accent-soft);
+        border-radius: 10px;
+      }
+
+      .bar {
+        height: 0.45rem;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.15);
+        overflow: hidden;
+        margin-top: 0.55rem;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #b91c1c, #ee0000 60%, #f87171);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="eyebrow">Migration Toolkit for Applications · CLI static reports</div>
+        <h1>Compará los cinco reportes MTA</h1>
+        <p class="lede">
+          Misma entrada (<code>sample-app</code>, Java 8), cinco targets. Abrí el
+          reporte Konveyor completo o usá esta vista para contrastar incidentes y
+          story points antes de mirar el detalle.
+        </p>
+        <div class="meta" id="meta">Cargando summaries.json…</div>
+      </header>
+
+      <section class="totals" id="totals" hidden>
+        <div class="stat">
+          <div class="label">Targets publicados</div>
+          <div class="value" id="stat-targets">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Incidentes (suma)</div>
+          <div class="value" id="stat-incidents">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Story points (suma)</div>
+          <div class="value" id="stat-story">—</div>
+        </div>
+      </section>
+
+      <section class="grid" id="cards"></section>
+
+      <table id="compare" hidden>
+        <thead>
+          <tr>
+            <th>Target</th>
+            <th>Incidentes</th>
+            <th>Story points</th>
+            <th>Categorías</th>
+            <th>Reporte</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <footer>
+        Regenerar localmente:
+        <code>bash scripts/mta-cli-analyze.sh all && bash scripts/publish-mta-reports.sh</code>.
+        Los assets de la UI Konveyor se deduplican en <code>shared/</code>; cada
+        target solo publica <code>output.js</code> sanitizado (sin rutas absolutas
+        de la máquina).
+      </footer>
+    </div>
+
+    <script>
+      const catClass = (name) => {
+        const n = (name || "").toLowerCase();
+        if (n.includes("mandatory")) return "mandatory";
+        if (n.includes("optional")) return "optional";
+        if (n.includes("potential")) return "potential";
+        if (n.includes("information")) return "information";
+        return "";
+      };
+
+      const fmt = (n) => new Intl.NumberFormat("es").format(n);
+
+      async function main() {
+        const meta = document.getElementById("meta");
+        const cards = document.getElementById("cards");
+        try {
+          const res = await fetch("./summaries.json", { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          meta.innerHTML = [
+            `<span><strong>Input</strong> ${data.input || "sample-app"}</span>`,
+            `<span><strong>Mode</strong> ${data.mode || "source-only"}</span>`,
+            data.cliVersion
+              ? `<span><strong>CLI / report</strong> ${data.cliVersion}</span>`
+              : "",
+            `<span><strong>Generated</strong> ${data.generatedAt || "—"}</span>`,
+          ]
+            .filter(Boolean)
+            .join("");
+
+          document.getElementById("totals").hidden = false;
+          document.getElementById("stat-targets").textContent = data.reports.length;
+          document.getElementById("stat-incidents").textContent = fmt(
+            data.totals?.incidents ?? 0
+          );
+          document.getElementById("stat-story").textContent = fmt(
+            data.totals?.storyPoints ?? 0
+          );
+
+          const maxInc = Math.max(
+            1,
+            ...data.reports.map((r) => r.incidents || 0)
+          );
+
+          cards.innerHTML = data.reports
+            .map((r) => {
+              const pills = Object.entries(r.categories || {})
+                .map(
+                  ([k, v]) =>
+                    `<span class="pill ${catClass(k)}">${k}: ${fmt(v)}</span>`
+                )
+                .join("");
+              const top = (r.topViolations || [])
+                .slice(0, 4)
+                .map(
+                  (v) =>
+                    `<li><code>${v.rule}</code> · ${fmt(v.incidents)} · effort ${
+                      v.effort
+                    }</li>`
+                )
+                .join("");
+              const pct = Math.round(((r.incidents || 0) / maxInc) * 100);
+              return `
+              <article class="card">
+                <div>
+                  <h2>${r.title}</h2>
+                  <p class="sub">${r.subtitle}</p>
+                </div>
+                <div class="metrics">
+                  <div class="metric"><span>Incidentes</span><strong>${fmt(
+                    r.incidents
+                  )}</strong></div>
+                  <div class="metric"><span>Story points</span><strong>${fmt(
+                    r.storyPoints
+                  )}</strong></div>
+                </div>
+                <div class="bar" title="Relativo al target con más incidentes"><span style="width:${pct}%"></span></div>
+                <div class="cats">${pills || '<span class="pill">sin hallazgos</span>'}</div>
+                <ul class="violations">${top || "<li>Sin violaciones listadas</li>"}</ul>
+                <div class="actions">
+                  <a class="btn btn-primary" href="./${r.target}/#/issues">Abrir issues</a>
+                  <a class="btn btn-ghost" href="./${r.target}/#/applications">Aplicación</a>
+                </div>
+              </article>`;
+            })
+            .join("");
+
+          const table = document.getElementById("compare");
+          table.hidden = false;
+          table.querySelector("tbody").innerHTML = data.reports
+            .map((r) => {
+              const cats = Object.entries(r.categories || {})
+                .map(([k, v]) => `${k} ${v}`)
+                .join(", ");
+              return `<tr>
+                <td>${r.title}<div class="sub">${r.target}</div></td>
+                <td class="num">${fmt(r.incidents)}</td>
+                <td class="num">${fmt(r.storyPoints)}</td>
+                <td>${cats || "—"}</td>
+                <td><a href="./${r.target}/">static-report</a></td>
+              </tr>`;
+            })
+            .join("");
+        } catch (err) {
+          meta.textContent = "";
+          cards.innerHTML = `<div class="error">No se pudo cargar <code>summaries.json</code>: ${err.message}. Serví la carpeta <code>docs/</code> por HTTP (GitHub Pages o <code>python3 -m http.server --directory docs</code>).</div>`;
+        }
+      }
+
+      main();
+    </script>
+  </body>
+</html>

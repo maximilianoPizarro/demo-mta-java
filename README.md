@@ -4,6 +4,8 @@
 
 Demo sintética con Migration Toolkit for Applications: mide el esfuerzo de pasar de Java 8 a OpenJDK 11, 17 y 21 y la aptitud a contenedores. WebLogic se queda como servidor de aplicaciones; no hay migración a EAP, Quarkus ni Open Liberty.
 
+**Reportes MTA (GitHub Pages):** [comparación de los cinco targets](https://maximilianopizarro.github.io/demo-mta-java/mta-reports/) — misma `sample-app` Java 8, reportes Konveyor sanitizados + tabla de incidentes/story points.
+
 El mismo repositorio Git alimenta:
 
 1. El build/deploy de la app de ejemplo y las tres conversiones operativas (Helm)
@@ -216,9 +218,28 @@ bash scripts/mta-cli-analyze.sh all
 # o task Dev Spaces: MTA reports all targets
 ```
 
-**4. Abrir el HTML:** en Dev Spaces, clic derecho sobre `mta-output/<target>/static-report/index.html` → Open With → Preview / Simple Browser. En local: abrí ese archivo en el navegador.
+**4. Abrir el HTML:** en Dev Spaces, clic derecho sobre `mta-output/<target>/static-report/index.html` → Open With → Preview / Simple Browser. En local: serví la carpeta (los reportes son SPA y necesitan HTTP):
 
-**5. Extensión MTA (UI):** además del CLI, en Dev Spaces podés elegir el perfil en `.konveyor/hub-profiles/` (`openjdk11`, `openjdk17`, `openjdk21`, `cloud-readiness`, `bc4j`, o `java-containers` para todos juntos) y lanzar el análisis desde la vista Migration Toolkit for Applications.
+```bash
+python3 -m http.server 8765 --directory mta-output/openjdk11/static-report
+# http://127.0.0.1:8765/
+```
+
+**5. Publicar en GitHub Pages (comparación robusta):** copiá los cinco `static-report` a `docs/` (assets Konveyor deduplicados, rutas `file://` locales saneadas, `summaries.json` + índice de comparación):
+
+```bash
+bash scripts/mta-cli-analyze.sh all   # si hace falta refrescar
+make publish-reports                  # → docs/mta-reports/
+# preview local:
+python3 -m http.server 8765 --directory docs
+# http://127.0.0.1:8765/mta-reports/
+```
+
+Tras el push a `main`, el workflow `.github/workflows/pages.yml` publica el sitio. URL estable:
+
+`https://maximilianopizarro.github.io/demo-mta-java/mta-reports/`
+
+**6. Extensión MTA (UI):** además del CLI, en Dev Spaces podés elegir el perfil en `.konveyor/hub-profiles/` (`openjdk11`, `openjdk17`, `openjdk21`, `cloud-readiness`, `bc4j`, o `java-containers` para todos juntos) y lanzar el análisis desde la vista Migration Toolkit for Applications.
 
 Guía oficial CLI: [Using the MTA command-line interface](https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/8.1/html/using_the_migration_toolkit_for_applications_command-line_interface/index).
 

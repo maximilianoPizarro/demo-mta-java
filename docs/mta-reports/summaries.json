@@ -1,0 +1,257 @@
+{
+  "generatedAt": "2026-09-30T17:59:30Z",
+  "input": "sample-app (Java 8)",
+  "mode": "source-only",
+  "cliVersion": "8.3.0",
+  "reports": [
+    {
+      "target": "openjdk11",
+      "title": "OpenJDK 11",
+      "subtitle": "Java 8 → 11 (APIs removidas / cambiadas)",
+      "application": "sample-app",
+      "incidents": 2,
+      "storyPoints": 4,
+      "categories": {
+        "mandatory": 2
+      },
+      "rulesetsWithHits": 2,
+      "topViolations": [
+        {
+          "rule": "oracle2openjdk-00006",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Oracle JDK JPEG image encoder/decoder usage",
+          "files": [
+            "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        },
+        {
+          "rule": "java-removals-00120",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The `sun.misc.BASE64` class has been removed.",
+          "files": [
+            "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        }
+      ],
+      "reportPath": "openjdk11/"
+    },
+    {
+      "target": "openjdk17",
+      "title": "OpenJDK 17",
+      "subtitle": "Java 8 → 17 (deprecaciones y remociones)",
+      "application": "sample-app",
+      "incidents": 2,
+      "storyPoints": 4,
+      "categories": {
+        "mandatory": 2
+      },
+      "rulesetsWithHits": 2,
+      "topViolations": [
+        {
+          "rule": "oracle2openjdk-00006",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Oracle JDK JPEG image encoder/decoder usage",
+          "files": [
+            "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        },
+        {
+          "rule": "java-removals-00120",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The `sun.misc.BASE64` class has been removed.",
+          "files": [
+            "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        }
+      ],
+      "reportPath": "openjdk17/"
+    },
+    {
+      "target": "openjdk21",
+      "title": "OpenJDK 21",
+      "subtitle": "Java 8 → 21 (APIs modernas vs legacy)",
+      "application": "sample-app",
+      "incidents": 4,
+      "storyPoints": 6,
+      "categories": {
+        "mandatory": 2,
+        "potential": 2
+      },
+      "rulesetsWithHits": 3,
+      "topViolations": [
+        {
+          "rule": "utf-8-by-default-00000",
+          "category": "potential",
+          "effort": 1,
+          "incidents": 2,
+          "description": "The 'java.io' constructor defaults to UTF-8",
+          "files": [
+            "src/main/java/com/example/demo/FileLogger.java",
+            "src/main/java/com/example/demo/LocalFilesystem.java"
+          ]
+        },
+        {
+          "rule": "oracle2openjdk-00006",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Oracle JDK JPEG image encoder/decoder usage",
+          "files": [
+            "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        },
+        {
+          "rule": "java-removals-00120",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "The `sun.misc.BASE64` class has been removed.",
+          "files": [
+            "src/main/java/com/example/demo/LegacyEncoding.java"
+          ]
+        }
+      ],
+      "reportPath": "openjdk21/"
+    },
+    {
+      "target": "cloud-readiness",
+      "title": "Cloud readiness",
+      "subtitle": "Filesystem, localhost, logs → contenedores",
+      "application": "sample-app",
+      "incidents": 6,
+      "storyPoints": 16,
+      "categories": {
+        "mandatory": 5,
+        "optional": 1
+      },
+      "rulesetsWithHits": 1,
+      "topViolations": [
+        {
+          "rule": "local-storage-00001",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 3,
+          "description": "File system - Java IO",
+          "files": [
+            "src/main/java/com/example/demo/FileLogger.java",
+            "src/main/java/com/example/demo/LocalFilesystem.java"
+          ]
+        },
+        {
+          "rule": "localhost-http-00001",
+          "category": "mandatory",
+          "effort": 7,
+          "incidents": 1,
+          "description": "Local HTTP Calls",
+          "files": [
+            "src/main/java/com/example/demo/HardcodedNetwork.java"
+          ]
+        },
+        {
+          "rule": "socket-communication-00000",
+          "category": "optional",
+          "effort": 5,
+          "incidents": 1,
+          "description": "Socket communication",
+          "files": [
+            "src/main/java/com/example/demo/App.java"
+          ]
+        },
+        {
+          "rule": "local-storage-00002",
+          "category": "mandatory",
+          "effort": 1,
+          "incidents": 1,
+          "description": "File system - java.net.URL/URI",
+          "files": [
+            "src/main/java/com/example/demo/HardcodedNetwork.java"
+          ]
+        }
+      ],
+      "reportPath": "cloud-readiness/"
+    },
+    {
+      "target": "bc4j",
+      "title": "BC4J / ADF",
+      "subtitle": "Certificar ADF en JDK + WebLogic contenedorizado",
+      "application": "sample-app",
+      "incidents": 15,
+      "storyPoints": 50,
+      "categories": {
+        "mandatory": 6,
+        "potential": 9
+      },
+      "rulesetsWithHits": 1,
+      "topViolations": [
+        {
+          "rule": "bc4j-package-import-00001",
+          "category": "potential",
+          "effort": 2,
+          "incidents": 7,
+          "description": "oracle.jbo package usage detected",
+          "files": [
+            "src/main/java/com/example/demo/Bc4jApplicationModule.java",
+            "src/main/resources/Model.jpx",
+            "src/main/resources/bc4j.xcfg"
+          ]
+        },
+        {
+          "rule": "bc4j-application-module-00001",
+          "category": "mandatory",
+          "effort": 5,
+          "incidents": 4,
+          "description": "Oracle BC4J ApplicationModule detected",
+          "files": [
+            "src/main/java/com/example/demo/Bc4jApplicationModule.java",
+            "src/main/resources/Model.jpx",
+            "src/main/resources/bc4j.xcfg"
+          ]
+        },
+        {
+          "rule": "bc4j-config-files-00001",
+          "category": "potential",
+          "effort": 5,
+          "incidents": 2,
+          "description": "BC4J or ADF model configuration present",
+          "files": [
+            "src/main/resources/Model.jpx",
+            "src/main/resources/bc4j.xcfg"
+          ]
+        },
+        {
+          "rule": "bc4j-entity-impl-00001",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Oracle BC4J EntityImpl detected",
+          "files": [
+            "src/main/resources/Model.jpx"
+          ]
+        },
+        {
+          "rule": "bc4j-view-object-00001",
+          "category": "mandatory",
+          "effort": 3,
+          "incidents": 1,
+          "description": "Oracle BC4J ViewObjectImpl detected",
+          "files": [
+            "src/main/resources/Model.jpx"
+          ]
+        }
+      ],
+      "reportPath": "bc4j/"
+    }
+  ],
+  "totals": {
+    "incidents": 29,
+    "storyPoints": 80
+  }
+}

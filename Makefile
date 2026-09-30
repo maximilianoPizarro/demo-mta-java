@@ -1,4 +1,4 @@
-.PHONY: help deploy install-mta-cli analyze-openjdk11 analyze-openjdk17 analyze-openjdk21 analyze-cloud analyze-bc4j analyze-all
+.PHONY: help deploy install-mta-cli analyze-openjdk11 analyze-openjdk17 analyze-openjdk21 analyze-cloud analyze-bc4j analyze-all publish-reports
 help:
 	@echo "Validated pattern demo-mta-java (hub-only CPU)"
 	@echo "  make deploy              Install MTA, Serverless, the CPU model, and Dev Spaces"
@@ -8,6 +8,7 @@ help:
 	@echo "  make analyze-cloud       MTA CLI report → mta-output/cloud-readiness"
 	@echo "  make analyze-bc4j        MTA CLI report → mta-output/bc4j"
 	@echo "  make analyze-all         All five CLI reports"
+	@echo "  make publish-reports     Copy sanitized reports → docs/ (GitHub Pages)"
 	@echo "  Pattern CR               oc apply -f examples/pattern-cr/hub-only-cpu.yaml"
 	@echo "  RHDP path                examples/bootstrap (Field Content GitOps path)"
 
@@ -42,3 +43,6 @@ analyze-bc4j:
 
 analyze-all:
 	bash scripts/mta-cli-analyze.sh all
+
+publish-reports:
+	bash scripts/publish-mta-reports.sh
