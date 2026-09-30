@@ -35,9 +35,9 @@ Pedido Field Content CI con:
 | Modelo catálogo | `granite-3-2-8b-instruct` (fallback; la demo usa Qwen en-cluster) |
 | Users | 1 |
 
-El chart `examples/bootstrap` instala el Validated Patterns Operator y el Pattern CR. Publicá estos cambios en `main` antes de pedir el cluster.
+El chart `examples/bootstrap` instala el Validated Patterns Operator y el Pattern CR. El repo en `main` ya incluye ese entrypoint.
 
-En un cluster ya existente:
+En un cluster ya existente (instala también las Subscriptions de MTA, Serverless y Dev Spaces):
 
 ```bash
 make deploy
@@ -77,7 +77,7 @@ oc apply -f examples/pattern-cr/hub-only-cpu.yaml
 
 ```bash
 export OC_TOKEN='<token>'   # no commits ni README
-oc login --token="$OC_TOKEN" --server=https://api.rm2.thpm.p1.openshiftapps.com:6443
+oc login --token="$OC_TOKEN" --server=https://api.<cluster>:6443
 oc whoami
 ```
 
@@ -91,8 +91,10 @@ oc auth can-i create customresourcedefinitions.apiextensions.k8s.io
 Si ambos responden `yes`:
 
 ```bash
+# Preferí make deploy (activa las Subscriptions). Helm solo del chart MTA:
 helm upgrade --install mta-demo ./charts/mta-demo \
   -n mta-demo --create-namespace \
+  --set mta.subscription.enabled=true \
   --set git.uri=https://github.com/maximilianoPizarro/demo-mta-java.git \
   --set git.ref=main
 ```
@@ -104,6 +106,7 @@ oc project <usuario>-dev
 helm upgrade --install mta-demo ./charts/mta-demo \
   -n <usuario>-dev \
   --set mta.enabled=false \
+  --set solutions.enabled=false \
   --set app.build.enabled=false \
   --set reports.enabled=true \
   --set git.uri=https://github.com/maximilianoPizarro/demo-mta-java.git
@@ -124,6 +127,7 @@ Si el cluster no puede clonar (sandbox sin build desde Git):
 helm upgrade --install mta-demo ./charts/mta-demo \
   -n <namespace> \
   --set mta.enabled=false \
+  --set solutions.enabled=false \
   --set app.build.enabled=false \
   --set reports.enabled=true
 
@@ -166,7 +170,7 @@ El número **no** mide un cambio de servidor de aplicaciones.
 
 ## Developer Lightspeed (opcional)
 
-Lightspeed no se activa en el `Tackle` de este chart (`kai_llm_proxy_enabled: false`). En Dev Spaces el workspace deja activo `konveyor.genai.agentMode` y el proveedor `cpu-qwen` de `.konveyor/provider-settings.yaml` (Qwen2.5-Coder en el Knative Service de este cluster, bearer `mta-demo`).
+Lightspeed no se activa en el `Tackle` de este chart (`kai_llm_proxy_enabled: false`). En Dev Spaces el workspace deja activo `mta-core.genai.agentMode` (`.vscode/settings.json`) y el proveedor `cpu-qwen` de `.konveyor/provider-settings.yaml` (Qwen2.5-Coder en el Knative Service de este cluster, bearer `mta-demo`). El `postStart` reescribe `baseURL` con la Route `mta-llm` del cluster.
 
 ## Valores útiles del chart
 
@@ -180,8 +184,12 @@ app:
   enabled: true
   build:
     enabled: true
+solutions:
+  enabled: true          # Routes mta-java-11 / 17 / 21
 mta:
   enabled: true          # false en Developer Sandbox
+  subscription:
+    enabled: false       # true con make deploy / Helm manual del operador
   targets:
     - openjdk11
     - openjdk17
