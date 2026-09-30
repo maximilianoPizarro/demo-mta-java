@@ -170,8 +170,12 @@ Cada target genera su propio HTML en `mta-output/<target>/static-report/index.ht
 
 ```bash
 cd ${PROJECT_SOURCE:-$(pwd)}
+# Red Hat CLI (recomendado). En Windows local, con el zip ya descargado:
+#   bash scripts/install-mta-cli.sh "$HOME/Downloads/mta-8.3.0-cli-windows-amd64.zip"
+# Si ya está extraído en .tools/mta-cli/:
 bash scripts/install-mta-cli.sh
 export PATH="$PWD/.tools/bin:$PATH"
+mta-cli version
 ```
 
 Si tenés el binario oficial de Red Hat, podés saltar el install y usar `MTA_CLI_URL` o un `mta-cli` ya en el `PATH`. El script de install usa Kantra upstream como fallback abierto.

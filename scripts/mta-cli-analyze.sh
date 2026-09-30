@@ -18,6 +18,14 @@ OUT_ROOT="${MTA_OUTPUT_ROOT:-mta-output}"
 MODE="${MTA_MODE:-source-only}"
 RULES_BC4J="${MTA_RULES_BC4J:-rules/bc4j}"
 
+# Absolute paths: the mta-cli wrapper cds into .tools/mta-cli for jdtls/rulesets.
+INPUT_ABS="$(cd "${INPUT}" 2>/dev/null && pwd || true)"
+if [ -z "${INPUT_ABS}" ]; then
+  INPUT_ABS="${ROOT}/${INPUT}"
+fi
+OUT_ROOT_ABS="${ROOT}/${OUT_ROOT}"
+RULES_BC4J_ABS="${ROOT}/${RULES_BC4J}"
+
 usage() {
   cat <<'EOF'
 Usage: bash scripts/mta-cli-analyze.sh <target>
@@ -39,8 +47,18 @@ EOF
 }
 
 resolve_cli() {
-  if [ -n "${MTA_CLI:-}" ] && [ -x "${MTA_CLI}" ]; then
+  if [ -n "${MTA_CLI:-}" ]; then
     printf '%s' "${MTA_CLI}"
+    return
+  fi
+  if [ -x "${ROOT}/.tools/bin/mta-cli" ]; then
+    printf '%s' "${ROOT}/.tools/bin/mta-cli"
+    return
+  fi
+  if [ -x "${ROOT}/.tools/mta-cli/windows-mta-cli.exe" ]; then
+    # Late-bind wrapper if the zip was extracted manually.
+    bash "${ROOT}/scripts/install-mta-cli.sh" >/dev/null
+    printf '%s' "${ROOT}/.tools/bin/mta-cli"
     return
   fi
   if command -v mta-cli >/dev/null 2>&1; then
@@ -51,32 +69,28 @@ resolve_cli() {
     command -v kantra
     return
   fi
-  if [ -x "${ROOT}/.tools/bin/mta-cli" ]; then
-    printf '%s' "${ROOT}/.tools/bin/mta-cli"
-    return
-  fi
   if [ -x "${ROOT}/.tools/bin/kantra" ]; then
     printf '%s' "${ROOT}/.tools/bin/kantra"
     return
   fi
-  echo "mta-cli/kantra not found. Run: bash scripts/install-mta-cli.sh" >&2
+  echo "mta-cli not found. Run: bash scripts/install-mta-cli.sh /path/to/mta-*-cli-*.zip" >&2
   exit 1
 }
 
 analyze_one() {
   local target="$1"
-  local out="${OUT_ROOT}/${target}"
+  local out="${OUT_ROOT_ABS}/${target}"
   local cli
   cli="$(resolve_cli)"
-  mkdir -p "${OUT_ROOT}"
+  mkdir -p "${OUT_ROOT_ABS}"
   rm -rf "${out}"
   mkdir -p "${out}"
 
-  echo "=== MTA analyze target=${target} input=${INPUT} out=${out} mode=${MODE} ==="
+  echo "=== MTA analyze target=${target} input=${INPUT_ABS} out=${out} mode=${MODE} ==="
   case "${target}" in
     openjdk11|openjdk17|openjdk21|cloud-readiness)
       "${cli}" analyze \
-        --input "${INPUT}" \
+        --input "${INPUT_ABS}" \
         --output "${out}" \
         --target "${target}" \
         --mode "${MODE}" \
@@ -84,10 +98,10 @@ analyze_one() {
       ;;
     bc4j)
       "${cli}" analyze \
-        --input "${INPUT}" \
+        --input "${INPUT_ABS}" \
         --output "${out}" \
         --target bc4j \
-        --rules "${RULES_BC4J}" \
+        --rules "${RULES_BC4J_ABS}" \
         --mode "${MODE}" \
         --overwrite
       ;;
@@ -112,8 +126,8 @@ if [ -z "${TARGET}" ] || [ "${TARGET}" = "-h" ] || [ "${TARGET}" = "--help" ]; t
   exit 0
 fi
 
-if [ ! -d "${INPUT}" ]; then
-  echo "Input not found: ${INPUT}" >&2
+if [ ! -d "${INPUT_ABS}" ]; then
+  echo "Input not found: ${INPUT_ABS}" >&2
   exit 1
 fi
 
@@ -121,7 +135,7 @@ if [ "${TARGET}" = "all" ]; then
   for t in openjdk11 openjdk17 openjdk21 cloud-readiness bc4j; do
     analyze_one "${t}"
   done
-  echo "All reports under ${OUT_ROOT}/"
+  echo "All reports under ${OUT_ROOT_ABS}/"
   exit 0
 fi
 

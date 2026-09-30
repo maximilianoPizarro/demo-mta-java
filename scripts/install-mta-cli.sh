@@ -1,52 +1,102 @@
-#!/bin/bash
-# Install mta-cli (Red Hat) or kantra (upstream) into .tools/ for Dev Spaces / local use.
+#!/usr/bin/env bash
+# Install / wire mta-cli into .tools/ for Dev Spaces and local use.
+#
+# Preferred (Windows local, already downloaded):
+#   bash scripts/install-mta-cli.sh "C:/Users/Max/Downloads/mta-8.3.0-cli-windows-amd64.zip"
+# Or extract once to .tools/mta-cli/ and re-run this script with no args.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TOOLS="${ROOT}/.tools"
+BUNDLE="${TOOLS}/mta-cli"
 BIN="${TOOLS}/bin"
-mkdir -p "${BIN}"
+mkdir -p "${BIN}" "${BUNDLE}"
 
-if command -v mta-cli >/dev/null 2>&1; then
-  echo "mta-cli already on PATH: $(command -v mta-cli)"
-  exit 0
+write_wrapper() {
+  cat > "${BIN}/mta-cli" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+BUNDLE="${ROOT}/.tools/mta-cli"
+EXE=""
+if [ -x "${BUNDLE}/windows-mta-cli.exe" ]; then
+  EXE="${BUNDLE}/windows-mta-cli.exe"
+elif [ -x "${BUNDLE}/linux-mta-cli" ]; then
+  EXE="${BUNDLE}/linux-mta-cli"
+elif [ -x "${BUNDLE}/darwin-mta-cli" ]; then
+  EXE="${BUNDLE}/darwin-mta-cli"
+elif [ -x "${BUNDLE}/mta-cli" ]; then
+  EXE="${BUNDLE}/mta-cli"
+else
+  echo "No MTA CLI binary under ${BUNDLE}" >&2
+  exit 1
 fi
-if [ -x "${BIN}/mta-cli" ]; then
-  echo "mta-cli already at ${BIN}/mta-cli"
-  exit 0
+# Must run from the bundle so jdtls/rulesets/static-report resolve.
+cd "${BUNDLE}"
+exec "${EXE}" "$@"
+EOF
+  chmod 0755 "${BIN}/mta-cli"
+  echo "Wrapper: ${BIN}/mta-cli"
+}
+
+extract_zip() {
+  local zip="$1"
+  if [ ! -f "${zip}" ]; then
+    echo "Zip not found: ${zip}" >&2
+    exit 1
+  fi
+  echo "Extracting ${zip} → ${BUNDLE}"
+  mkdir -p "${BUNDLE}"
+  # Quiet extract; large archive (~750 MiB).
+  unzip -o -q "${zip}" -d "${BUNDLE}"
+}
+
+# Arg 1: optional path to Red Hat mta-*-cli-*.zip
+ZIP_ARG="${1:-${MTA_CLI_ZIP:-}}"
+if [ -n "${ZIP_ARG}" ]; then
+  extract_zip "${ZIP_ARG}"
 fi
-if [ -x "${BIN}/kantra" ]; then
-  ln -sfn "${BIN}/kantra" "${BIN}/mta-cli"
-  echo "Linked ${BIN}/kantra -> ${BIN}/mta-cli"
+
+# Already extracted?
+if [ -x "${BUNDLE}/windows-mta-cli.exe" ] || [ -x "${BUNDLE}/linux-mta-cli" ] || [ -x "${BUNDLE}/darwin-mta-cli" ] || [ -x "${BUNDLE}/mta-cli" ]; then
+  write_wrapper
+  export PATH="${BIN}:${PATH}"
+  echo "Configured Red Hat MTA CLI bundle at ${BUNDLE}"
+  "${BIN}/mta-cli" version || true
+  echo "Add to PATH: export PATH=\"${BIN}:\$PATH\""
   exit 0
 fi
 
-# Optional: point at a Red Hat mta-cli tarball/zip URL (requires RH login cookie in some cases).
-# Example:
-#   export MTA_CLI_URL='https://developers.redhat.com/content-gateway/file/.../mta-cli-linux.zip'
+# Optional download URL
 if [ -n "${MTA_CLI_URL:-}" ]; then
   tmp="$(mktemp -d)"
   archive="${tmp}/mta-cli-archive"
   echo "Downloading MTA CLI from MTA_CLI_URL..."
   curl -fL --retry 3 -o "${archive}" "${MTA_CLI_URL}"
   case "${MTA_CLI_URL}" in
-    *.zip) (cd "${tmp}" && unzip -q "${archive}") ;;
-    *.tar.gz|*.tgz) (cd "${tmp}" && tar -xzf "${archive}") ;;
-    *) echo "Unsupported archive type in MTA_CLI_URL"; exit 1 ;;
+    *.zip)
+      extract_zip "${archive}"
+      ;;
+    *.tar.gz|*.tgz)
+      (cd "${BUNDLE}" && tar -xzf "${archive}")
+      ;;
+    *)
+      echo "Unsupported archive type in MTA_CLI_URL" >&2
+      exit 1
+      ;;
   esac
-  found="$(find "${tmp}" -type f \( -name mta-cli -o -name kantra \) | head -1)"
-  if [ -z "${found}" ]; then
-    echo "No mta-cli/kantra binary inside archive"
-    exit 1
-  fi
-  cp "${found}" "${BIN}/mta-cli"
-  chmod 0755 "${BIN}/mta-cli"
-  echo "Installed ${BIN}/mta-cli"
+  write_wrapper
+  "${BIN}/mta-cli" version || true
   echo "Add to PATH: export PATH=\"${BIN}:\$PATH\""
   exit 0
 fi
 
-# Fallback: upstream Kantra (same analyze UX as MTA CLI for this demo).
+# Fallback: upstream Kantra (smaller; not the full Red Hat bundle).
+if command -v mta-cli >/dev/null 2>&1; then
+  echo "mta-cli already on PATH: $(command -v mta-cli)"
+  exit 0
+fi
+
 KANTRA_VERSION="${KANTRA_VERSION:-v0.10.0-beta.1}"
 ARCH="$(uname -m)"
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -72,4 +122,5 @@ cp "${found}" "${BIN}/kantra"
 chmod 0755 "${BIN}/kantra"
 ln -sfn "${BIN}/kantra" "${BIN}/mta-cli" 2>/dev/null || cp "${BIN}/kantra" "${BIN}/mta-cli"
 echo "Installed ${BIN}/mta-cli (kantra ${KANTRA_VERSION})"
+echo "Prefer the Red Hat zip: bash scripts/install-mta-cli.sh /path/to/mta-*-cli-*.zip"
 echo "Add to PATH: export PATH=\"${BIN}:\$PATH\""
