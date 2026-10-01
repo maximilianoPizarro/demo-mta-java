@@ -1,0 +1,105 @@
+# Ejemplo: generar los reportes MTA y publicarlos en AKS.
+# No construye la imagen de sample-app ni hace push a un registry.
+#
+# Antes de correrlo:
+#   1. Bajá el Migration Toolkit CLI desde
+#      https://developers.redhat.com/products/mta/download
+#      (zip Linux x86_64, no el Ops CLI).
+#   2. Pipelines → Library → Secure files: subí ese zip con el nombre mta-cli.zip
+#      y autorizá el archivo para este pipeline.
+#   3. Service connection Azure Resource Manager, nombre literal azure-mta-demo,
+#      con permiso de leer credenciales del cluster (Azure Kubernetes Service Cluster User).
+#   4. Reemplazá aksResourceGroup y aksClusterName.
+#   5. Environment aks-demo si querés aprobación antes de publicar en el cluster.
+#
+# Crear el pipeline: New pipeline → Existing YAML → examples/aks/azure-pipelines.yml
+# Las service connections van como literales: Azure DevOps las autoriza en compile time.
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - sample-app/**
+      - rules/bc4j/**
+      - scripts/mta-cli-analyze.sh
+      - scripts/install-mta-cli.sh
+      - scripts/publish-mta-reports.sh
+      - examples/aks/**
+
+pr: none
+
+variables:
+  aksResourceGroup: my-resource-group
+  aksClusterName: my-aks
+  k8sNamespace: mta-demo
+
+stages:
+  - stage: Report
+    displayName: Generate MTA report
+    jobs:
+      - job: Analyze
+        displayName: mta-cli analyze
+        timeoutInMinutes: 120
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: DownloadSecureFile@1
+            name: mtaCli
+            displayName: Download MTA CLI zip
+            inputs:
+              secureFile: mta-cli.zip
+
+          - script: |
+              set -euo pipefail
+              bash scripts/install-mta-cli.sh "$(mtaCli.secureFilePath)"
+              export PATH="$PWD/.tools/bin:$PATH"
+              mta-cli version
+              bash scripts/mta-cli-analyze.sh all
+              bash scripts/publish-mta-reports.sh
+            displayName: Analyze sample-app and build the comparison
+
+          - publish: docs/mta-reports
+            artifact: mta-reports
+            displayName: Publish report artifact
+
+  - stage: Deploy
+    displayName: Publish report on AKS
+    dependsOn: Report
+    jobs:
+      - deployment: Aks
+        displayName: Copy report into nginx
+        pool:
+          vmImage: ubuntu-latest
+        environment: aks-demo
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - download: current
+                  artifact: mta-reports
+
+                - task: AzureCLI@2
+                  displayName: Apply manifests and copy the report
+                  inputs:
+                    azureSubscription: azure-mta-demo
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      az aks get-credentials \
+                        --resource-group "$(aksResourceGroup)" \
+                        --name "$(aksClusterName)" \
+                        --overwrite-existing
+                      kubelogin convert-kubeconfig -l azurecli
+                      kubectl apply -f examples/aks/namespace.yaml
+                      kubectl apply -n "$(k8sNamespace)" -f examples/aks/report.yaml
+                      kubectl rollout status deployment/mta-effort-report \
+                        -n "$(k8sNamespace)" --timeout=180s
+                      POD="$(kubectl get pod -n "$(k8sNamespace)" -l app=mta-effort-report -o jsonpath='{.items[0].metadata.name}')"
+                      kubectl exec -n "$(k8sNamespace)" "$POD" -- sh -c 'rm -rf /usr/share/nginx/html/*'
+                      kubectl cp "$(Pipeline.Workspace)/mta-reports/." "$(k8sNamespace)/${POD}:/usr/share/nginx/html"
+                      kubectl get svc mta-effort-report -n "$(k8sNamespace)"

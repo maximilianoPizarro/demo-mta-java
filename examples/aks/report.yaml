@@ -1,0 +1,74 @@
+# Sirve el HTML generado por el pipeline. La imagen es nginx público:
+# el pipeline no construye sample-app ni publica nada en un registry.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mta-reports
+  labels:
+    app: mta-effort-report
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mta-effort-report
+  labels:
+    app: mta-effort-report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mta-effort-report
+  template:
+    metadata:
+      labels:
+        app: mta-effort-report
+    spec:
+      securityContext:
+        fsGroup: 101
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:1.27-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: reports
+              mountPath: /usr/share/nginx/html
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      volumes:
+        - name: reports
+          persistentVolumeClaim:
+            claimName: mta-reports
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mta-effort-report
+  labels:
+    app: mta-effort-report
+spec:
+  type: LoadBalancer
+  selector:
+    app: mta-effort-report
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
